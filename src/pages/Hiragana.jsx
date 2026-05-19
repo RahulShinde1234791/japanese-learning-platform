@@ -1,34 +1,21 @@
-const hiragana = [
-  { kana: "あ", romaji: "a", example: "あさ (asa) - morning" },
-  { kana: "い", romaji: "i", example: "いぬ (inu) - dog" },
-  { kana: "う", romaji: "u", example: "うみ (umi) - sea" },
-  { kana: "え", romaji: "e", example: "えき (eki) - station" },
-  { kana: "お", romaji: "o", example: "おちゃ (ocha) - tea" },
+import { Link } from "react-router-dom";
 
-  { kana: "か", romaji: "ka", example: "かさ (kasa) - umbrella" },
-  { kana: "き", romaji: "ki", example: "き (ki) - tree" },
-  { kana: "く", romaji: "ku", example: "くるま (kuruma) - car" },
-  { kana: "け", romaji: "ke", example: "けさ (kesa) - this morning" },
-  { kana: "こ", romaji: "ko", example: "こども (kodomo) - child" },
-];
+import KanaTable from "../components/KanaTable";
+import hiragana from "../data/hiragana";
 
 function Hiragana() {
   return (
     <div style={styles.page}>
+      <Link to="/" style={styles.backLink}>
+        ← Home
+      </Link>
+
       <h1 style={styles.title}>Hiragana</h1>
       <p style={styles.subtitle}>
-        Hover over a character to see its pronunciation and an example word.
+        Study the traditional hiragana chart by vowel column and consonant row.
       </p>
 
-      <div style={styles.grid}>
-        {hiragana.map((char) => (
-          <div key={char.kana} style={styles.card}>
-            <div style={styles.kana}>{char.kana}</div>
-            <div style={styles.romaji}>{char.romaji}</div>
-            <div style={styles.example}>{char.example}</div>
-          </div>
-        ))}
-      </div>
+      <KanaTable rows={hiragana} />
     </div>
   );
 }
@@ -36,60 +23,32 @@ function Hiragana() {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "#020617",
+    background:
+      "radial-gradient(circle at top left, rgba(244, 114, 182, 0.2), transparent 32%), #020617",
     color: "white",
-    padding: "40px 20px",
+    padding: "40px 20px 56px",
     fontFamily: "Arial, sans-serif",
+    boxSizing: "border-box",
   },
-
+  backLink: {
+    color: "#f9a8d4",
+    display: "inline-flex",
+    marginBottom: "28px",
+    textDecoration: "none",
+    fontWeight: 700,
+  },
   title: {
-  textAlign: "center",
-  fontSize: "clamp(2.5rem, 6vw, 5rem)",
-  marginBottom: "10px",
-  lineHeight: 1.1,
-},
-
+    textAlign: "center",
+    fontSize: "clamp(2.5rem, 6vw, 5rem)",
+    margin: "0 0 10px",
+    lineHeight: 1.1,
+    color: "white",
+  },
   subtitle: {
     textAlign: "center",
     color: "#cbd5e1",
     marginBottom: "40px",
     fontSize: "1.1rem",
-  },
-
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "20px",
-    maxWidth: "1200px",
-    margin: "0 auto",
-  },
-
-  card: {
-    background: "#1e293b",
-    borderRadius: "20px",
-    padding: "25px",
-    textAlign: "center",
-    transition: "transform 0.3s ease",
-    cursor: "pointer",
-    border: "1px solid rgba(148, 163, 184, 0.15)",
-  },
-
-  kana: {
-    fontSize: "4rem",
-    marginBottom: "10px",
-  },
-
-  romaji: {
-    fontSize: "1.4rem",
-    fontWeight: "bold",
-    marginBottom: "10px",
-    color: "#a78bfa",
-  },
-
-  example: {
-    color: "#cbd5e1",
-    lineHeight: "1.5",
-    fontSize: "0.95rem",
   },
 };
 
