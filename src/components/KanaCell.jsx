@@ -1,4 +1,8 @@
-function KanaCell({ cell, onSelect }) {
+import { useState } from "react";
+
+function KanaCell({ cell }) {
+  const [isHovering, setIsHovering] = useState(false);
+
   if (!cell) {
     return <div style={styles.empty} aria-hidden="true" />;
   }
@@ -6,15 +10,23 @@ function KanaCell({ cell, onSelect }) {
   return (
     <button
       type="button"
-      style={styles.cell}
-      title={`${cell.kana} (${cell.romaji}) - ${cell.example}`}
-      onClick={() => onSelect(cell)}
-      onFocus={() => onSelect(cell)}
-      onMouseEnter={() => onSelect(cell)}
+      style={{
+        ...styles.cell,
+        ...(isHovering ? styles.cellHover : {}),
+      }}
+      onBlur={() => setIsHovering(false)}
+      onFocus={() => setIsHovering(true)}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       <span style={styles.kana}>{cell.kana}</span>
       <span style={styles.romaji}>{cell.romaji}</span>
-      <span style={styles.example}>{cell.example}</span>
+
+      {isHovering && (
+        <span style={styles.tooltip} role="tooltip">
+          {cell.example}
+        </span>
+      )}
     </button>
   );
 }
@@ -38,7 +50,14 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     padding: "16px 12px",
+    position: "relative",
     transition: "border-color 0.2s ease, transform 0.2s ease, background 0.2s ease",
+  },
+  cellHover: {
+    background: "rgba(30, 41, 59, 0.98)",
+    borderColor: "rgba(249, 168, 212, 0.9)",
+    transform: "translateY(-3px)",
+    zIndex: 3,
   },
   empty: {
     ...baseCell,
@@ -54,14 +73,25 @@ const styles = {
     color: "#f9a8d4",
     fontSize: "1rem",
     fontWeight: 700,
-    marginBottom: "8px",
     textTransform: "uppercase",
   },
-  example: {
-    color: "#cbd5e1",
-    fontSize: "0.82rem",
+  tooltip: {
+    background: "#f8fafc",
+    border: "1px solid rgba(15, 23, 42, 0.12)",
+    borderRadius: "8px",
+    bottom: "calc(100% + 10px)",
+    boxShadow: "0 18px 40px rgba(0, 0, 0, 0.35)",
+    color: "#0f172a",
+    fontSize: "0.85rem",
+    fontWeight: 700,
+    left: "50%",
     lineHeight: 1.35,
-    maxWidth: "18ch",
+    minWidth: "190px",
+    padding: "10px 12px",
+    pointerEvents: "none",
+    position: "absolute",
+    transform: "translateX(-50%)",
+    zIndex: 6,
   },
 };
 
