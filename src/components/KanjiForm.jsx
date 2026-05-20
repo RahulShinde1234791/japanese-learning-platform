@@ -11,6 +11,36 @@ const emptyForm = {
 
 function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   const [formData, setFormData] = useState(editingEntry ?? emptyForm);
+  const [loading, setLoading] = useState(false);
+
+  async function handleAutoFill() {
+    const kanjiStr = formData.kanji.trim();
+    if (!kanjiStr) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`https://kanjiapi.dev/v1/kanji/${encodeURIComponent(kanjiStr)}`);
+      if (!response.ok) {
+        throw new Error("Kanji not found");
+      }
+      const data = await response.json();
+
+      const meanings = (data.meanings || []).join(", ");
+      const onyomi = (data.on_readings || []).join(", ");
+      const kunyomi = (data.kun_readings || []).join(", ");
+
+      setFormData((currentFormData) => ({
+        ...currentFormData,
+        meaning: meanings,
+        onyomi: onyomi,
+        kunyomi: kunyomi,
+      }));
+    } catch {
+      alert("Kanji not found.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -41,14 +71,28 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
 
       <label style={styles.label}>
         Kanji
-        <input
-          required
-          maxLength={4}
-          name="kanji"
-          style={styles.input}
-          value={formData.kanji}
-          onChange={handleChange}
-        />
+        <div style={styles.inputContainer}>
+          <input
+            required
+            maxLength={4}
+            name="kanji"
+            style={{ ...styles.input, marginTop: 0 }}
+            value={formData.kanji}
+            onChange={handleChange}
+          />
+          <button
+            type="button"
+            disabled={loading || !formData.kanji.trim()}
+            style={
+              loading || !formData.kanji.trim()
+                ? styles.autoFillButtonDisabled
+                : styles.autoFillButton
+            }
+            onClick={handleAutoFill}
+          >
+            {loading ? "Loading..." : "Auto Fill"}
+          </button>
+        </div>
       </label>
 
       <label style={styles.label}>
@@ -184,6 +228,34 @@ const styles = {
     cursor: "pointer",
     fontWeight: 800,
     padding: "8px 12px",
+  },
+  inputContainer: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "8px",
+  },
+  autoFillButton: {
+    background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+    border: "none",
+    borderRadius: "8px",
+    color: "white",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    fontWeight: 800,
+    padding: "12px 16px",
+    whiteSpace: "nowrap",
+    transition: "opacity 0.2s ease",
+  },
+  autoFillButtonDisabled: {
+    background: "rgba(148, 163, 184, 0.08)",
+    border: "1px solid rgba(148, 163, 184, 0.15)",
+    borderRadius: "8px",
+    color: "#64748b",
+    cursor: "not-allowed",
+    fontSize: "0.9rem",
+    fontWeight: 800,
+    padding: "12px 16px",
+    whiteSpace: "nowrap",
   },
 };
 
