@@ -4,31 +4,43 @@ import { Link } from "react-router-dom";
 import KanjiCard from "../components/KanjiCard";
 import KanjiForm from "../components/KanjiForm";
 import kanjiDefaults from "../data/kanjiDefaults";
-import { loadKanji, saveKanji } from "../utils/localStorage";
+import { loadFavorites, loadKanji, saveFavorites, saveKanji } from "../utils/localStorage";
 
 function Kanji() {
   const [kanjiEntries, setKanjiEntries] = useState(() => loadKanji() ?? kanjiDefaults);
   const [editingEntry, setEditingEntry] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [favorites, setFavorites] = useState(() => loadFavorites());
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   useEffect(() => {
     saveKanji(kanjiEntries);
   }, [kanjiEntries]);
 
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
+
   const filteredEntries = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    if (!normalizedSearch) {
-      return kanjiEntries;
+    let entries = kanjiEntries;
+
+    if (showFavoritesOnly) {
+      entries = entries.filter((entry) => favorites.has(entry.id));
     }
 
-    return kanjiEntries.filter((entry) =>
+    if (!normalizedSearch) {
+      return entries;
+    }
+
+    return entries.filter((entry) =>
       [entry.kanji, entry.meaning, entry.onyomi, entry.kunyomi, entry.example, entry.notes]
         .join(" ")
         .toLowerCase()
         .includes(normalizedSearch),
     );
-  }, [kanjiEntries, searchTerm]);
+  }, [kanjiEntries, searchTerm, favorites, showFavoritesOnly]);
 
   function handleSubmit(formData) {
     if (editingEntry) {
@@ -49,10 +61,29 @@ function Kanji() {
 
   function handleDelete(id) {
     setKanjiEntries((currentEntries) => currentEntries.filter((entry) => entry.id !== id));
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     if (editingEntry?.id === id) {
       setEditingEntry(null);
     }
   }
+
+  function handleToggleFavorite(id) {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  const favoritesCount = favorites.size;
 
   return (
     <div style={styles.page}>
@@ -78,6 +109,7 @@ function Kanji() {
         </aside>
 
         <section style={styles.content}>
+          {/* Search & stats panel */}
           <div style={styles.searchPanel}>
             <div>
               <p style={styles.kicker}>Collection</p>
@@ -92,21 +124,50 @@ function Kanji() {
             />
           </div>
 
+          {/* Favorites filter bar */}
+          <div style={styles.filterBar}>
+            <button
+              type="button"
+              style={!showFavoritesOnly ? styles.filterButtonActive : styles.filterButton}
+              onClick={() => setShowFavoritesOnly(false)}
+            >
+              All ({kanjiEntries.length})
+            </button>
+            <button
+              type="button"
+              style={showFavoritesOnly ? styles.filterButtonFavActive : styles.filterButton}
+              onClick={() => setShowFavoritesOnly(true)}
+            >
+              ⭐ Favorites ({favoritesCount})
+            </button>
+          </div>
+
           {filteredEntries.length > 0 ? (
             <div style={styles.cardGrid}>
               {filteredEntries.map((entry) => (
                 <KanjiCard
                   key={entry.id}
                   entry={entry}
+                  isFavorite={favorites.has(entry.id)}
                   onDelete={handleDelete}
                   onEdit={setEditingEntry}
+                  onToggleFavorite={handleToggleFavorite}
                 />
               ))}
             </div>
           ) : (
             <div style={styles.emptyState}>
-              <h2 style={styles.emptyTitle}>No kanji found</h2>
-              <p style={styles.emptyCopy}>Try a different search or add a new entry.</p>
+              <div style={styles.emptyIcon}>
+                {showFavoritesOnly ? "⭐" : "🔍"}
+              </div>
+              <h2 style={styles.emptyTitle}>
+                {showFavoritesOnly ? "No favorites yet" : "No kanji found"}
+              </h2>
+              <p style={styles.emptyCopy}>
+                {showFavoritesOnly
+                  ? "Star a kanji card to add it to your favorites."
+                  : "Try a different search or add a new entry."}
+              </p>
             </div>
           )}
         </section>
@@ -122,8 +183,8 @@ const styles = {
       "radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 30%), radial-gradient(circle at top left, rgba(236, 72, 153, 0.18), transparent 34%), #020617",
     boxSizing: "border-box",
     color: "white",
-    fontFamily: "Arial, sans-serif",
-    padding: "40px 20px 56px",
+    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 24px) 56px",
   },
   backLink: {
     color: "#f9a8d4",
@@ -131,6 +192,7 @@ const styles = {
     fontWeight: 700,
     marginBottom: "28px",
     textDecoration: "none",
+    fontSize: "0.95rem",
   },
   header: {
     margin: "0 auto 36px",
@@ -139,20 +201,21 @@ const styles = {
   },
   title: {
     color: "white",
-    fontSize: "clamp(2.5rem, 6vw, 5rem)",
+    fontSize: "clamp(2.2rem, 6vw, 5rem)",
     lineHeight: 1.1,
     margin: "0 0 10px",
+    fontFamily: "inherit",
   },
   subtitle: {
     color: "#cbd5e1",
-    fontSize: "1.1rem",
+    fontSize: "clamp(0.95rem, 2.5vw, 1.1rem)",
     lineHeight: 1.6,
   },
   layout: {
     alignItems: "start",
     display: "grid",
     gap: "24px",
-    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
     margin: "0 auto",
     maxWidth: "1240px",
   },
@@ -167,12 +230,12 @@ const styles = {
     alignItems: "center",
     background: "rgba(15, 23, 42, 0.7)",
     border: "1px solid rgba(226, 232, 240, 0.14)",
-    borderRadius: "8px",
+    borderRadius: "10px",
     display: "flex",
     flexWrap: "wrap",
     gap: "18px",
     justifyContent: "space-between",
-    marginBottom: "18px",
+    marginBottom: "12px",
     padding: "18px",
   },
   kicker: {
@@ -188,6 +251,7 @@ const styles = {
     fontSize: "1.45rem",
     fontWeight: 900,
     margin: 0,
+    fontFamily: "inherit",
   },
   searchInput: {
     background: "rgba(15, 23, 42, 0.9)",
@@ -201,25 +265,73 @@ const styles = {
     padding: "12px 14px",
     width: "100%",
   },
+  filterBar: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "18px",
+    flexWrap: "wrap",
+  },
+  filterButton: {
+    background: "rgba(30, 41, 59, 0.5)",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "999px",
+    color: "#94a3b8",
+    cursor: "pointer",
+    fontSize: "0.88rem",
+    fontWeight: 700,
+    padding: "8px 18px",
+    transition: "all 0.18s ease",
+    fontFamily: "inherit",
+  },
+  filterButtonActive: {
+    background: "rgba(236, 72, 153, 0.18)",
+    border: "1px solid rgba(236, 72, 153, 0.4)",
+    borderRadius: "999px",
+    color: "#f9a8d4",
+    cursor: "pointer",
+    fontSize: "0.88rem",
+    fontWeight: 700,
+    padding: "8px 18px",
+    transition: "all 0.18s ease",
+    fontFamily: "inherit",
+  },
+  filterButtonFavActive: {
+    background: "rgba(251, 191, 36, 0.14)",
+    border: "1px solid rgba(251, 191, 36, 0.35)",
+    borderRadius: "999px",
+    color: "#fbbf24",
+    cursor: "pointer",
+    fontSize: "0.88rem",
+    fontWeight: 700,
+    padding: "8px 18px",
+    transition: "all 0.18s ease",
+    fontFamily: "inherit",
+  },
   cardGrid: {
     display: "grid",
     gap: "16px",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
   },
   emptyState: {
     background: "rgba(15, 23, 42, 0.76)",
     border: "1px solid rgba(226, 232, 240, 0.14)",
-    borderRadius: "8px",
-    padding: "36px 20px",
+    borderRadius: "12px",
+    padding: "48px 20px",
     textAlign: "center",
+  },
+  emptyIcon: {
+    fontSize: "2.4rem",
+    marginBottom: "14px",
   },
   emptyTitle: {
     color: "white",
-    fontSize: "1.5rem",
+    fontSize: "1.4rem",
     margin: "0 0 8px",
+    fontFamily: "inherit",
   },
   emptyCopy: {
-    color: "#cbd5e1",
+    color: "#94a3b8",
+    fontSize: "0.95rem",
   },
 };
 

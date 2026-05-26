@@ -174,8 +174,9 @@ const styles = {
   form: {
     background: "rgba(15, 23, 42, 0.78)",
     border: "1px solid rgba(226, 232, 240, 0.16)",
-    borderRadius: "8px",
+    borderRadius: "12px",
     boxShadow: "0 18px 36px rgba(0, 0, 0, 0.28)",
+    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     padding: "24px",
     textAlign: "left",
   },

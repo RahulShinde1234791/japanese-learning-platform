@@ -1,17 +1,48 @@
-function KanjiCard({ entry, onDelete, onEdit }) {
+import { useState } from "react";
+
+import StrokeOrder from "./StrokeOrder";
+
+function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
+  const [showStrokes, setShowStrokes] = useState(false);
+  const [starAnimating, setStarAnimating] = useState(false);
+
+  function handleToggleFavorite() {
+    onToggleFavorite(entry.id);
+    setStarAnimating(true);
+  }
+
   return (
     <article style={styles.card}>
       <div style={styles.topRow}>
-        <div>
+        <div style={styles.kanjiBlock}>
           <div style={styles.kanji}>{entry.kanji}</div>
           <div style={styles.meaning}>{entry.meaning}</div>
         </div>
 
         <div style={styles.actions}>
+          {/* Favourite star */}
+          <button
+            type="button"
+            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            style={{
+              ...styles.starButton,
+              ...(isFavorite ? styles.starButtonActive : {}),
+            }}
+            className={starAnimating ? "star-pop" : ""}
+            onAnimationEnd={() => setStarAnimating(false)}
+            onClick={handleToggleFavorite}
+          >
+            {isFavorite ? "⭐" : "☆"}
+          </button>
+
           <button type="button" style={styles.editButton} onClick={() => onEdit(entry)}>
             Edit
           </button>
-          <button type="button" style={styles.deleteButton} onClick={() => onDelete(entry.id)}>
+          <button
+            type="button"
+            style={styles.deleteButton}
+            onClick={() => onDelete(entry.id)}
+          >
             Delete
           </button>
         </div>
@@ -30,6 +61,21 @@ function KanjiCard({ entry, onDelete, onEdit }) {
 
       <p style={styles.example}>{entry.example}</p>
       {entry.notes && <p style={styles.notes}>{entry.notes}</p>}
+
+      {/* Stroke order toggle */}
+      <button
+        type="button"
+        style={showStrokes ? styles.strokeButtonActive : styles.strokeButton}
+        onClick={() => setShowStrokes((prev) => !prev)}
+      >
+        {showStrokes ? "Hide Strokes ▲" : "Show Strokes ▼"}
+      </button>
+
+      {showStrokes && (
+        <div style={styles.strokeWrapper}>
+          <StrokeOrder kanji={entry.kanji} />
+        </div>
+      )}
     </article>
   );
 }
@@ -38,10 +84,12 @@ const styles = {
   card: {
     background: "rgba(15, 23, 42, 0.82)",
     border: "1px solid rgba(226, 232, 240, 0.14)",
-    borderRadius: "8px",
+    borderRadius: "12px",
     boxShadow: "0 18px 36px rgba(0, 0, 0, 0.26)",
     padding: "22px",
     textAlign: "left",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    transition: "border-color 0.2s ease",
   },
   topRow: {
     alignItems: "flex-start",
@@ -49,22 +97,44 @@ const styles = {
     gap: "16px",
     justifyContent: "space-between",
   },
+  kanjiBlock: {
+    minWidth: 0,
+  },
   kanji: {
     color: "#f8fafc",
-    fontSize: "4rem",
+    fontSize: "clamp(2.8rem, 8vw, 4rem)",
     fontWeight: 800,
     lineHeight: 1,
   },
   meaning: {
     color: "#f9a8d4",
-    fontSize: "1.08rem",
+    fontSize: "1rem",
     fontWeight: 800,
     marginTop: "10px",
+    lineHeight: 1.4,
   },
   actions: {
     display: "flex",
     flexDirection: "column",
     gap: "8px",
+    flexShrink: 0,
+  },
+  starButton: {
+    background: "rgba(71, 85, 105, 0.2)",
+    border: "1px solid rgba(148, 163, 184, 0.2)",
+    borderRadius: "8px",
+    color: "#94a3b8",
+    cursor: "pointer",
+    fontSize: "1.1rem",
+    fontWeight: 800,
+    padding: "7px 11px",
+    transition: "background 0.2s, color 0.2s",
+    lineHeight: 1,
+  },
+  starButtonActive: {
+    background: "rgba(251, 191, 36, 0.15)",
+    border: "1px solid rgba(251, 191, 36, 0.35)",
+    color: "#fbbf24",
   },
   editButton: {
     background: "rgba(96, 165, 250, 0.18)",
@@ -74,6 +144,7 @@ const styles = {
     cursor: "pointer",
     fontWeight: 800,
     padding: "8px 12px",
+    fontFamily: "inherit",
   },
   deleteButton: {
     background: "rgba(244, 63, 94, 0.16)",
@@ -83,11 +154,12 @@ const styles = {
     cursor: "pointer",
     fontWeight: 800,
     padding: "8px 12px",
+    fontFamily: "inherit",
   },
   metaGrid: {
     display: "grid",
     gap: "10px",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
     margin: "22px 0 0",
   },
   metaItem: {
@@ -106,8 +178,9 @@ const styles = {
   },
   value: {
     color: "#f8fafc",
-    fontSize: "1rem",
+    fontSize: "0.97rem",
     margin: 0,
+    wordBreak: "break-word",
   },
   example: {
     color: "#e2e8f0",
@@ -120,6 +193,39 @@ const styles = {
     fontSize: "0.95rem",
     lineHeight: 1.5,
     marginTop: "12px",
+  },
+  strokeButton: {
+    marginTop: "16px",
+    width: "100%",
+    background: "rgba(30, 41, 59, 0.5)",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "8px",
+    color: "#94a3b8",
+    cursor: "pointer",
+    fontSize: "0.82rem",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    padding: "9px 14px",
+    transition: "background 0.2s, color 0.2s, border-color 0.2s",
+    fontFamily: "inherit",
+  },
+  strokeButtonActive: {
+    marginTop: "16px",
+    width: "100%",
+    background: "rgba(59, 130, 246, 0.12)",
+    border: "1px solid rgba(147, 197, 253, 0.28)",
+    borderRadius: "8px",
+    color: "#93c5fd",
+    cursor: "pointer",
+    fontSize: "0.82rem",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    padding: "9px 14px",
+    transition: "background 0.2s, color 0.2s, border-color 0.2s",
+    fontFamily: "inherit",
+  },
+  strokeWrapper: {
+    animation: "fadeSlideIn 0.25s ease",
   },
 };
 
