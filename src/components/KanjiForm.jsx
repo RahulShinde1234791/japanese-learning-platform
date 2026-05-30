@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const emptyForm = {
   kanji: "",
+  jlptLevel: "",
   meaning: "",
   onyomi: "",
   kunyomi: "",
@@ -9,7 +10,38 @@ const emptyForm = {
   notes: "",
 };
 
-function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
+const jlptOptions = ["N5", "N4", "N3", "N2", "N1"];
+const kanjiPattern = /\p{Script=Han}/u;
+
+function formatJlptLevel(jlpt) {
+  return jlpt ? `N${jlpt}` : "";
+}
+
+function getHardestJlptLevel(results) {
+  const levels = results.map((result) => result.jlpt).filter(Boolean);
+  if (levels.length === 0) return "";
+
+  return formatJlptLevel(Math.min(...levels));
+}
+
+function joinUnique(values) {
+  return [...new Set(values.filter(Boolean))].join(", ");
+}
+
+function getWordVariant(wordData) {
+  return wordData.variants?.[0] ?? {};
+}
+
+function formatWordEntry(wordData, fallbackWord = "") {
+  const variant = getWordVariant(wordData);
+  return {
+    word: variant.written || fallbackWord,
+    reading: variant.pronounced || "",
+    meaning: (wordData.meanings?.[0]?.glosses || []).join(", "),
+  };
+}
+
+function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }) {
   const [formData, setFormData] = useState(editingEntry ?? emptyForm);
   const [loading, setLoading] = useState(false);
 
@@ -19,22 +51,81 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://kanjiapi.dev/v1/kanji/${encodeURIComponent(kanjiStr)}`);
-      if (!response.ok) {
-        throw new Error("Kanji not found");
+      const kanjiCharacters = [...new Set(Array.from(kanjiStr).filter((char) => kanjiPattern.test(char)))];
+      if (kanjiCharacters.length === 0) {
+        throw new Error("No kanji found");
       }
-      const data = await response.json();
 
-      const meanings = (data.meanings || []).join(", ");
-      const onyomi = (data.on_readings || []).join(", ");
-      const kunyomi = (data.kun_readings || []).join(", ");
+      const kanjiResults = await Promise.all(
+        kanjiCharacters.map(async (char) => {
+          const response = await fetch(`https://kanjiapi.dev/v1/kanji/${encodeURIComponent(char)}`);
+          if (!response.ok) {
+            throw new Error("Kanji not found");
+          }
+          return response.json();
+        }),
+      );
+      const wordLists = await Promise.all(
+        kanjiCharacters.map(async (char) => {
+          const response = await fetch(`https://kanjiapi.dev/v1/words/${encodeURIComponent(char)}`);
+          return response.ok ? response.json() : [];
+        }),
+      );
+      const wordResults = wordLists.flat();
+      const matchingWord = wordResults.find((wordData) =>
+        wordData.variants?.some((variant) => variant.written === kanjiStr),
+      );
+      const suggestions = wordResults
+        .map((wordData) => formatWordEntry(wordData))
+        .filter((word) => word.word && word.word !== kanjiStr)
+        .filter((word, index, words) => words.findIndex((item) => item.word === word.word) === index)
+        .slice(0, 8);
+
+      const meanings = kanjiResults
+        .map((data) => `${data.kanji}: ${(data.meanings || []).join(", ")}`)
+        .join("; ");
+      const onyomi = joinUnique(kanjiResults.flatMap((data) => data.on_readings || []));
+      const kunyomi = joinUnique(kanjiResults.flatMap((data) => data.kun_readings || []));
+      const jlptLevel = getHardestJlptLevel(kanjiResults);
+      const isVocabulary = Array.from(kanjiStr).length > 1;
+      const matchedVocabulary = formatWordEntry(matchingWord ?? {}, kanjiStr);
+      const vocabularyEntry = isVocabulary
+        ? {
+            ...matchedVocabulary,
+            word: kanjiStr,
+            meaning: matchedVocabulary.meaning || meanings,
+            jlptLevel,
+          }
+        : null;
+      const generatedKanjiEntries = kanjiResults.map((data) => ({
+        kanji: data.kanji,
+        jlptLevel: formatJlptLevel(data.jlpt),
+        meaning: (data.meanings || []).join(", "),
+        onyomi: (data.on_readings || []).join(", "),
+        kunyomi: (data.kun_readings || []).join(", "),
+        example: vocabularyEntry
+          ? `${vocabularyEntry.word}${vocabularyEntry.reading ? ` (${vocabularyEntry.reading})` : ""}`
+          : "",
+        notes: vocabularyEntry
+          ? `From vocabulary: ${vocabularyEntry.word}`
+          : "Added from autofill.",
+      }));
 
       setFormData((currentFormData) => ({
         ...currentFormData,
-        meaning: meanings,
+        jlptLevel,
+        meaning: vocabularyEntry?.meaning || meanings,
         onyomi: onyomi,
         kunyomi: kunyomi,
+        example:
+          currentFormData.example ||
+          (vocabularyEntry
+            ? `${vocabularyEntry.word}${vocabularyEntry.reading ? ` (${vocabularyEntry.reading})` : ""}`
+            : ""),
+        vocabularyEntry,
+        generatedKanjiEntries,
       }));
+      onSuggestionsChange?.(suggestions);
     } catch {
       alert("Kanji not found.");
     } finally {
@@ -93,6 +184,23 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
             {loading ? "Loading..." : "Auto Fill"}
           </button>
         </div>
+      </label>
+
+      <label style={styles.label}>
+        JLPT Level
+        <select
+          name="jlptLevel"
+          style={styles.input}
+          value={formData.jlptLevel ?? ""}
+          onChange={handleChange}
+        >
+          <option value="">Unknown</option>
+          {jlptOptions.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label style={styles.label}>

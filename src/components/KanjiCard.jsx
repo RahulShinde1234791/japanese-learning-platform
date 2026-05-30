@@ -15,7 +15,10 @@ function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
     <article style={styles.card}>
       <div style={styles.topRow}>
         <div style={styles.kanjiBlock}>
-          <div style={styles.kanji}>{entry.kanji}</div>
+          <div style={styles.kanjiHeader}>
+            <div style={styles.kanji}>{entry.kanji}</div>
+            <span style={styles.levelBadge}>{entry.jlptLevel || "Unknown"}</span>
+          </div>
           <div style={styles.meaning}>{entry.meaning}</div>
         </div>
 
@@ -100,11 +103,26 @@ const styles = {
   kanjiBlock: {
     minWidth: 0,
   },
+  kanjiHeader: {
+    alignItems: "center",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+  },
   kanji: {
     color: "#f8fafc",
     fontSize: "clamp(2.8rem, 8vw, 4rem)",
     fontWeight: 800,
     lineHeight: 1,
+  },
+  levelBadge: {
+    background: "rgba(20, 184, 166, 0.14)",
+    border: "1px solid rgba(94, 234, 212, 0.3)",
+    borderRadius: "999px",
+    color: "#99f6e4",
+    fontSize: "0.76rem",
+    fontWeight: 900,
+    padding: "5px 9px",
   },
   meaning: {
     color: "#f9a8d4",

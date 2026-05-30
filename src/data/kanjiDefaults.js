@@ -2,6 +2,7 @@ const kanjiDefaults = [
   {
     id: 1,
     kanji: "学",
+    jlptLevel: "N5",
     meaning: "study, learning",
     onyomi: "ガク",
     kunyomi: "まなぶ",
@@ -11,6 +12,7 @@ const kanjiDefaults = [
   {
     id: 2,
     kanji: "日",
+    jlptLevel: "N5",
     meaning: "sun, day",
     onyomi: "ニチ, ジツ",
     kunyomi: "ひ, か",
@@ -20,6 +22,7 @@ const kanjiDefaults = [
   {
     id: 3,
     kanji: "人",
+    jlptLevel: "N5",
     meaning: "person",
     onyomi: "ジン, ニン",
     kunyomi: "ひと",

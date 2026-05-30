@@ -1,5 +1,6 @@
 const KANJI_STORAGE_KEY = "japanese-learning-app-kanji";
 const FAVORITES_STORAGE_KEY = "japanese-learning-app-favorites";
+const VOCAB_STORAGE_KEY = "japanese-learning-app-vocabulary";
 
 export function loadKanji() {
   try {
@@ -13,6 +14,23 @@ export function loadKanji() {
 export function saveKanji(data) {
   try {
     window.localStorage.setItem(KANJI_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // localStorage can fail in private browsing or restricted environments.
+  }
+}
+
+export function loadVocabulary() {
+  try {
+    const storedVocabulary = window.localStorage.getItem(VOCAB_STORAGE_KEY);
+    return storedVocabulary ? JSON.parse(storedVocabulary) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveVocabulary(data) {
+  try {
+    window.localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(data));
   } catch {
     // localStorage can fail in private browsing or restricted environments.
   }

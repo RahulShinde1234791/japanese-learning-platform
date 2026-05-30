@@ -10,17 +10,21 @@ function toKanjiVGFilename(char) {
 }
 
 function StrokeOrder({ kanji }) {
-  const [svgContent, setSvgContent] = useState(null);
-  const [status, setStatus] = useState("loading"); // "loading" | "ready" | "error"
+  const normalizedKanji = kanji?.trim()[0] ?? "";
+  const [svgState, setSvgState] = useState({
+    kanji: "",
+    status: "loading",
+    svgContent: null,
+  });
   const containerRef = useRef(null);
+  const isCurrentKanji = svgState.kanji === normalizedKanji;
+  const status = isCurrentKanji ? svgState.status : "loading";
+  const svgContent = isCurrentKanji ? svgState.svgContent : null;
 
   useEffect(() => {
-    if (!kanji) return;
+    if (!normalizedKanji) return;
 
-    setStatus("loading");
-    setSvgContent(null);
-
-    const hex = toKanjiVGFilename(kanji.trim()[0]);
+    const hex = toKanjiVGFilename(normalizedKanji);
     const url = `https://raw.githubusercontent.com/KanjiVG/kanjivg/master/kanji/${hex}.svg`;
 
     const controller = new AbortController();
@@ -36,17 +40,24 @@ function StrokeOrder({ kanji }) {
           .replace(/<\?xml[^?]*\?>/g, "")
           .replace(/<!--[\s\S]*?-->/g, "")
           .trim();
-        setSvgContent(cleaned);
-        setStatus("ready");
+        setSvgState({
+          kanji: normalizedKanji,
+          status: "ready",
+          svgContent: cleaned,
+        });
       })
       .catch((err) => {
         if (err.name !== "AbortError") {
-          setStatus("error");
+          setSvgState({
+            kanji: normalizedKanji,
+            status: "error",
+            svgContent: null,
+          });
         }
       });
 
     return () => controller.abort();
-  }, [kanji]);
+  }, [normalizedKanji]);
 
   // Inject per-stroke animation after SVG is rendered
   useEffect(() => {
@@ -97,7 +108,6 @@ function StrokeOrder({ kanji }) {
         ref={containerRef}
         style={styles.svgContainer}
         // KanjiVG SVGs are trusted static files from a public GitHub repo
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: svgContent }}
       />
     </div>
