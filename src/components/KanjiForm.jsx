@@ -34,11 +34,59 @@ function getWordVariant(wordData) {
 
 function formatWordEntry(wordData, fallbackWord = "") {
   const variant = getWordVariant(wordData);
+  const partsOfSpeech = wordData.meanings?.[0]?.parts_of_speech || [];
   return {
     word: variant.written || fallbackWord,
     reading: variant.pronounced || "",
     meaning: (wordData.meanings?.[0]?.glosses || []).join(", "),
+    partsOfSpeech: partsOfSpeech.filter((part) => part !== "Wikipedia definition").join(", "),
+    source: partsOfSpeech.includes("Wikipedia definition") ? "Wikipedia entry via kanjiapi.dev" : "",
   };
+}
+
+function formatJishoEntry(entry, fallbackWord = "") {
+  const japanese =
+    entry.japanese?.find((variant) => variant.word === fallbackWord || variant.word?.startsWith(fallbackWord)) ??
+    entry.japanese?.[0] ??
+    {};
+  const sense = entry.senses?.[0] ?? {};
+
+  return {
+    word: fallbackWord && japanese.word?.startsWith(fallbackWord) ? fallbackWord : japanese.word || fallbackWord,
+    reading: japanese.reading || "",
+    meaning: (sense.english_definitions || []).join(", "),
+    partsOfSpeech: (sense.parts_of_speech || []).join(", "),
+    source: "Jisho.org",
+  };
+}
+
+function isExactJishoMatch(entry, word) {
+  return entry.japanese?.some(
+    (variant) => variant.word === word || variant.word?.startsWith(word) || variant.reading === word,
+  );
+}
+
+async function fetchJishoWords(word) {
+  try {
+    const response = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.data || [];
+  } catch {
+    return [];
+  }
+}
+
+function buildKanjiNotes(data) {
+  const facts = [
+    data.jlpt ? `JLPT N${data.jlpt}` : "",
+    data.grade ? `taught in Japanese school grade ${data.grade}` : "",
+    data.stroke_count ? `${data.stroke_count} strokes` : "",
+    data.freq ? `frequency rank ${data.freq}` : "",
+  ].filter(Boolean);
+  const source = "Source: kanjiapi.dev kanji data.";
+
+  return facts.length > 0 ? `${facts.join("; ")}. ${source}` : source;
 }
 
 function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }) {
@@ -72,12 +120,19 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
         }),
       );
       const wordResults = wordLists.flat();
+      const jishoResults = await fetchJishoWords(kanjiStr);
+      const exactJishoWord = jishoResults.find((entry) => isExactJishoMatch(entry, kanjiStr));
       const matchingWord = wordResults.find((wordData) =>
         wordData.variants?.some((variant) => variant.written === kanjiStr),
       );
-      const suggestions = wordResults
+      const kanjiApiSuggestions = wordResults
         .map((wordData) => formatWordEntry(wordData))
-        .filter((word) => word.word && word.word !== kanjiStr)
+        .filter((word) => word.word && word.word !== kanjiStr);
+      const jishoSuggestions = jishoResults
+        .filter((entry) => !isExactJishoMatch(entry, kanjiStr))
+        .map((entry) => formatJishoEntry(entry))
+        .filter((word) => word.word && word.word !== kanjiStr);
+      const suggestions = [...jishoSuggestions, ...kanjiApiSuggestions]
         .filter((word, index, words) => words.findIndex((item) => item.word === word.word) === index)
         .slice(0, 8);
 
@@ -88,12 +143,14 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
       const kunyomi = joinUnique(kanjiResults.flatMap((data) => data.kun_readings || []));
       const jlptLevel = getHardestJlptLevel(kanjiResults);
       const isVocabulary = Array.from(kanjiStr).length > 1;
-      const matchedVocabulary = formatWordEntry(matchingWord ?? {}, kanjiStr);
+      const matchedVocabulary = exactJishoWord
+        ? formatJishoEntry(exactJishoWord, kanjiStr)
+        : formatWordEntry(matchingWord ?? {}, kanjiStr);
       const vocabularyEntry = isVocabulary
         ? {
             ...matchedVocabulary,
             word: kanjiStr,
-            meaning: matchedVocabulary.meaning || meanings,
+            meaning: matchedVocabulary.meaning || "No exact dictionary definition found. Review this word before saving.",
             jlptLevel,
           }
         : null;
@@ -106,9 +163,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
         example: vocabularyEntry
           ? `${vocabularyEntry.word}${vocabularyEntry.reading ? ` (${vocabularyEntry.reading})` : ""}`
           : "",
-        notes: vocabularyEntry
-          ? `From vocabulary: ${vocabularyEntry.word}`
-          : "Added from autofill.",
+        notes: buildKanjiNotes(data),
       }));
 
       setFormData((currentFormData) => ({
@@ -143,7 +198,17 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
 
   function handleSubmit(event) {
     event.preventDefault();
-    onSubmit(formData);
+    const normalizedFormData = formData.vocabularyEntry
+      ? {
+          ...formData,
+          vocabularyEntry: {
+            ...formData.vocabularyEntry,
+            jlptLevel: formData.jlptLevel,
+            meaning: formData.meaning,
+          },
+        }
+      : formData;
+    onSubmit(normalizedFormData);
     setFormData(emptyForm);
   }
 
@@ -165,7 +230,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
         <div style={styles.inputContainer}>
           <input
             required
-            maxLength={4}
+            maxLength={12}
             name="kanji"
             style={{ ...styles.input, marginTop: 0 }}
             value={formData.kanji}
@@ -319,7 +384,7 @@ const styles = {
     gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
   },
   primaryButton: {
-    background: "linear-gradient(135deg, #ec4899, #f59e0b)",
+    background: "linear-gradient(135deg, #0d9488, #2563eb)",
     border: "none",
     borderRadius: "8px",
     color: "white",

@@ -24,7 +24,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top right, rgba(96, 165, 250, 0.2), transparent 32%), #020617",
+      "linear-gradient(135deg, rgba(56, 189, 248, 0.14) 0%, transparent 36%), linear-gradient(160deg, #061826 0%, #102646 50%, #14172f 100%)",
     color: "white",
     padding: "40px 20px 56px",
     fontFamily: "Arial, sans-serif",

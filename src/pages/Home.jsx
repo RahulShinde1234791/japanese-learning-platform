@@ -9,21 +9,21 @@ function Home() {
       title: "Hiragana",
       kana: "あ",
       description: "Learn the basic Japanese phonetic alphabet.",
-      gradient: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+      gradient: "linear-gradient(135deg, #0f766e, #2563eb)",
       path: "/hiragana",
     },
     {
       title: "Katakana",
       kana: "ア",
       description: "Master characters used for foreign words.",
-      gradient: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+      gradient: "linear-gradient(135deg, #0284c7, #4f46e5)",
       path: "/katakana",
     },
     {
       title: "Kanji",
       kana: "漢",
       description: "Build your personal kanji collection and notes.",
-      gradient: "linear-gradient(135deg, #ec4899, #db2777)",
+      gradient: "linear-gradient(135deg, #f59e0b, #0d9488)",
       path: "/kanji",
     },
   ];
@@ -110,7 +110,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top, #151144 0%, #020617 60%, #01030a 100%)",
+      "linear-gradient(135deg, #07111f 0%, #082f3a 48%, #0b1220 100%)",
     color: "white",
     fontFamily:
       "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -134,7 +134,7 @@ const styles = {
     position: "absolute",
     inset: 0,
     background:
-      "linear-gradient(90deg, rgba(2, 6, 23, 0.22) 0%, rgba(2, 6, 23, 0.56) 42%, rgba(2, 6, 23, 0.86) 100%), linear-gradient(180deg, rgba(2, 6, 23, 0.28) 0%, rgba(2, 6, 23, 0.54) 48%, rgba(2, 6, 23, 0.94) 100%)",
+      "linear-gradient(90deg, rgba(4, 18, 30, 0.18) 0%, rgba(7, 26, 41, 0.54) 42%, rgba(6, 14, 30, 0.9) 100%), linear-gradient(180deg, rgba(8, 47, 58, 0.18) 0%, rgba(9, 31, 44, 0.44) 48%, rgba(4, 11, 24, 0.94) 100%)",
   },
 
   sakuraLeft: {
@@ -176,7 +176,7 @@ const styles = {
   },
 
   japaneseText: {
-    color: "#f9a8d4",
+    color: "#99f6e4",
     fontSize: "0.95rem",
     letterSpacing: "0.2em",
     marginBottom: "16px",
@@ -190,7 +190,7 @@ const styles = {
   },
 
   gradientText: {
-    background: "linear-gradient(90deg, #c084fc, #f472b6)",
+    background: "linear-gradient(90deg, #5eead4, #93c5fd)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },

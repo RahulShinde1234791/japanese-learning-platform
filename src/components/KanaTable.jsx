@@ -60,8 +60,8 @@ const styles = {
   },
   headerCell: {
     color: "#f8fafc",
-    background: "rgba(244, 114, 182, 0.16)",
-    border: "1px solid rgba(244, 114, 182, 0.24)",
+    background: "rgba(20, 184, 166, 0.16)",
+    border: "1px solid rgba(94, 234, 212, 0.24)",
     borderRadius: "8px",
     fontSize: "0.92rem",
     fontWeight: 800,

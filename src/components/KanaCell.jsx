@@ -70,7 +70,7 @@ const styles = {
     marginBottom: "10px",
   },
   romaji: {
-    color: "#f9a8d4",
+    color: "#5eead4",
     fontSize: "1rem",
     fontWeight: 700,
     textTransform: "uppercase",

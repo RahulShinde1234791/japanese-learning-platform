@@ -24,14 +24,14 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top left, rgba(244, 114, 182, 0.2), transparent 32%), #020617",
+      "linear-gradient(135deg, rgba(20, 184, 166, 0.16) 0%, transparent 34%), linear-gradient(160deg, #051b1f 0%, #0b2438 48%, #0f172a 100%)",
     color: "white",
     padding: "40px 20px 56px",
     fontFamily: "Arial, sans-serif",
     boxSizing: "border-box",
   },
   backLink: {
-    color: "#f9a8d4",
+    color: "#5eead4",
     display: "inline-flex",
     marginBottom: "28px",
     textDecoration: "none",

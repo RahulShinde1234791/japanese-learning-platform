@@ -125,7 +125,7 @@ const styles = {
     padding: "5px 9px",
   },
   meaning: {
-    color: "#f9a8d4",
+    color: "#fbbf24",
     fontSize: "1rem",
     fontWeight: 800,
     marginTop: "10px",
