@@ -9,22 +9,29 @@ function Home() {
       title: "Hiragana",
       kana: "あ",
       description: "Learn the basic Japanese phonetic alphabet.",
-      gradient: "linear-gradient(135deg, #0f766e, #2563eb)",
+      gradient: "linear-gradient(135deg, #7c3aed, #4f46e5)",
       path: "/hiragana",
     },
     {
       title: "Katakana",
       kana: "ア",
       description: "Master characters used for foreign words.",
-      gradient: "linear-gradient(135deg, #0284c7, #4f46e5)",
+      gradient: "linear-gradient(135deg, #2563eb, #1d4ed8)",
       path: "/katakana",
     },
     {
       title: "Kanji",
       kana: "漢",
       description: "Build your personal kanji collection and notes.",
-      gradient: "linear-gradient(135deg, #f59e0b, #0d9488)",
+      gradient: "linear-gradient(135deg, #ec4899, #db2777)",
       path: "/kanji",
+    },
+    {
+      title: "Vocabulary",
+      kana: "語",
+      description: "Save words with readings, meanings, and example sentences.",
+      gradient: "linear-gradient(135deg, #6d28d9, #4338ca)",
+      path: "/vocabulary",
     },
   ];
 

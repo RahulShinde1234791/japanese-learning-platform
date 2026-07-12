@@ -1,55 +1,77 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import KanjiCard from "../components/KanjiCard";
-import KanjiForm from "../components/KanjiForm";
-import kanjiDefaults from "../data/kanjiDefaults";
+import VocabularyCard from "../components/VocabularyCard";
+import VocabularyForm from "../components/VocabularyForm";
+import vocabularyDefaults from "../data/vocabularyDefaults";
 import {
-  loadKanji,
-  loadKanjiFavorites,
-  saveKanji,
-  saveKanjiFavorites,
+  loadVocabulary,
+  loadVocabularyFavorites,
+  saveVocabulary,
+  saveVocabularyFavorites,
 } from "../utils/localStorage";
 
-const floatingKanji = ["漢", "字", "学", "日", "人", "山", "水", "火", "木", "金", "土", "月"];
+const floatingWords = ["語", "言", "论", "詞", "文", "読", "書", "記", "心", "知", "意", "語彙"];
+const kanjiPattern = /\p{Script=Han}/u;
 
-function Kanji() {
-  const [kanjiEntries, setKanjiEntries] = useState(() => loadKanji() ?? kanjiDefaults);
+function hasKanjiMeaningFallback(entry) {
+  const kanjiChars = Array.from(entry.word || "").filter((char) => kanjiPattern.test(char));
+  if (kanjiChars.length < 2 || !entry.meaning) return false;
+
+  return kanjiChars.some((char) => entry.meaning.includes(`${char}:`));
+}
+
+function buildExampleSentence(word) {
+  if (!word) return "";
+  if (word.endsWith("る")) return `${word}ことが好きです。`;
+  return `${word}を使います。`;
+}
+
+function normalizeVocabularyEntry(entry) {
+  return {
+    ...entry,
+    meaning: hasKanjiMeaningFallback(entry) ? "" : entry.meaning,
+    exampleSentence: entry.exampleSentence || buildExampleSentence(entry.word),
+  };
+}
+
+function Vocabulary() {
+  const [entries, setEntries] = useState(() =>
+    (loadVocabulary() ?? vocabularyDefaults).map(normalizeVocabularyEntry),
+  );
   const [editingEntry, setEditingEntry] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [favorites, setFavorites] = useState(() => loadKanjiFavorites());
+  const [favorites, setFavorites] = useState(() => loadVocabularyFavorites());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  useEffect(() => { saveKanji(kanjiEntries); }, [kanjiEntries]);
-  useEffect(() => { saveKanjiFavorites(favorites); }, [favorites]);
+  useEffect(() => { saveVocabulary(entries); }, [entries]);
+  useEffect(() => { saveVocabularyFavorites(favorites); }, [favorites]);
 
   const filteredEntries = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    let list = showFavoritesOnly
-      ? kanjiEntries.filter((e) => favorites.has(e.id))
-      : kanjiEntries;
+    let list = showFavoritesOnly ? entries.filter((e) => favorites.has(e.id)) : entries;
     if (!q) return list;
     return list.filter((e) =>
-      [e.kanji, e.meaning, e.onyomi, e.kunyomi, e.jlpt, e.notes]
+      [e.word, e.reading, e.meaning, e.exampleSentence, e.notes]
         .join(" ")
         .toLowerCase()
         .includes(q),
     );
-  }, [kanjiEntries, searchTerm, favorites, showFavoritesOnly]);
+  }, [entries, searchTerm, favorites, showFavoritesOnly]);
 
   function handleSubmit(formData) {
     if (editingEntry) {
-      setKanjiEntries((prev) =>
+      setEntries((prev) =>
         prev.map((e) => (e.id === editingEntry.id ? { ...formData, id: editingEntry.id } : e)),
       );
       setEditingEntry(null);
       return;
     }
-    setKanjiEntries((prev) => [{ ...formData, id: Date.now() }, ...prev]);
+    setEntries((prev) => [{ ...formData, id: Date.now() }, ...prev]);
   }
 
   function handleDelete(id) {
-    setKanjiEntries((prev) => prev.filter((e) => e.id !== id));
+    setEntries((prev) => prev.filter((e) => e.id !== id));
     setFavorites((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -68,20 +90,20 @@ function Kanji() {
 
   return (
     <div style={styles.page}>
-      {/* Floating kanji */}
-      {floatingKanji.map((k, i) => (
+      {/* Floating words */}
+      {floatingWords.map((w, i) => (
         <span
-          key={k}
+          key={w + i}
           style={{
-            ...styles.floatKanji,
-            left: `${(i * 83) % 92}%`,
-            top: `${(i * 127 + 5) % 87}%`,
-            animationDelay: `${i * 0.8}s`,
-            fontSize: `${2 + (i % 4) * 0.8}rem`,
-            opacity: 0.03 + (i % 4) * 0.02,
+            ...styles.floatWord,
+            left: `${(i * 79) % 91}%`,
+            top: `${(i * 131 + 9) % 86}%`,
+            animationDelay: `${i * 0.75}s`,
+            fontSize: `${1.6 + (i % 4) * 0.7}rem`,
+            opacity: 0.035 + (i % 4) * 0.02,
           }}
         >
-          {k}
+          {w}
         </span>
       ))}
 
@@ -89,17 +111,17 @@ function Kanji() {
         <Link to="/" style={styles.backLink}>← Home</Link>
 
         <header style={styles.header}>
-          <p style={styles.heroKicker}>漢字ノート</p>
-          <h1 style={styles.title}>Kanji Notes</h1>
+          <p style={styles.heroKicker}>語彙コレクション</p>
+          <h1 style={styles.title}>Vocabulary</h1>
           <p style={styles.subtitle}>
-            Build a personal kanji notebook with meanings, readings, and study notes.
+            Build your personal word list with readings, meanings, and example sentences.
           </p>
         </header>
 
       <main style={styles.layout}>
         <aside style={styles.sidebar}>
-          <KanjiForm
-            key={editingEntry?.id ?? "new-kanji"}
+          <VocabularyForm
+            key={editingEntry?.id ?? "new-vocab"}
             editingEntry={editingEntry}
             onCancelEdit={() => setEditingEntry(null)}
             onSubmit={handleSubmit}
@@ -107,26 +129,28 @@ function Kanji() {
         </aside>
 
         <section style={styles.content}>
+          {/* Search & stats */}
           <div style={styles.searchPanel}>
             <div>
               <p style={styles.kicker}>Collection</p>
-              <h2 style={styles.sectionTitle}>{kanjiEntries.length} saved kanji</h2>
+              <h2 style={styles.sectionTitle}>{entries.length} saved words</h2>
             </div>
             <input
-              placeholder="Search kanji, readings, meanings…"
+              placeholder="Search words, readings, meanings…"
               style={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
+          {/* Filter bar */}
           <div style={styles.filterBar}>
             <button
               type="button"
               style={!showFavoritesOnly ? styles.filterActive : styles.filter}
               onClick={() => setShowFavoritesOnly(false)}
             >
-              All ({kanjiEntries.length})
+              All ({entries.length})
             </button>
             <button
               type="button"
@@ -140,7 +164,7 @@ function Kanji() {
           {filteredEntries.length > 0 ? (
             <div style={styles.cardGrid}>
               {filteredEntries.map((entry) => (
-                <KanjiCard
+                <VocabularyCard
                   key={entry.id}
                   entry={entry}
                   isFavorite={favorites.has(entry.id)}
@@ -152,14 +176,14 @@ function Kanji() {
             </div>
           ) : (
             <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>{showFavoritesOnly ? "⭐" : "🔍"}</div>
+              <div style={styles.emptyIcon}>{showFavoritesOnly ? "⭐" : "📖"}</div>
               <h2 style={styles.emptyTitle}>
-                {showFavoritesOnly ? "No favorites yet" : "No kanji found"}
+                {showFavoritesOnly ? "No favorites yet" : "No words found"}
               </h2>
               <p style={styles.emptyCopy}>
                 {showFavoritesOnly
-                  ? "Star a kanji card to add it to your favorites."
-                  : "Try a different search or add a new entry."}
+                  ? "Star a word card to add it to your favorites."
+                  : "Try a different search or add a new word."}
               </p>
             </div>
           )}
@@ -170,11 +194,11 @@ function Kanji() {
       <style>{`
         @keyframes orbFloat {
           0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-36px) scale(1.07); }
+          50% { transform: translateY(-38px) scale(1.07); }
         }
-        @keyframes kanjiDrift {
+        @keyframes wordDrift {
           0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-22px) rotate(4deg); }
+          50% { transform: translateY(-20px) rotate(-5deg); }
         }
       `}</style>
     </div>
@@ -185,20 +209,20 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, transparent 28%), linear-gradient(225deg, rgba(245, 158, 11, 0.1) 0%, transparent 30%), linear-gradient(160deg, #061821 0%, #102235 50%, #141827 100%)",
+      "linear-gradient(135deg, rgba(56, 189, 248, 0.14) 0%, transparent 36%), linear-gradient(160deg, #061826 0%, #102646 50%, #14172f 100%)",
     boxSizing: "border-box",
     color: "white",
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     overflow: "hidden",
     position: "relative",
   },
-  floatKanji: {
+  floatWord: {
     position: "absolute",
-    color: "#f9a8d4",
+    color: "#a5b4fc",
     fontWeight: 900,
     pointerEvents: "none",
     userSelect: "none",
-    animation: "kanjiDrift 7s ease-in-out infinite",
+    animation: "wordDrift 7s ease-in-out infinite",
     zIndex: 0,
   },
   pageContent: {
@@ -207,22 +231,26 @@ const styles = {
     padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 24px) 56px",
   },
   heroKicker: {
-    color: "#f9a8d4",
-    fontSize: "1.5rem",
+    color: "#a5b4fc",
+    fontSize: "1.4rem",
     fontWeight: 900,
-    letterSpacing: "0.1em",
+    letterSpacing: "0.08em",
     marginBottom: "8px",
-    opacity: 0.8,
+    opacity: 0.85,
   },
   backLink: {
-    color: "#f9a8d4",
+    color: "#a5b4fc",
     display: "inline-flex",
     fontWeight: 700,
     marginBottom: "28px",
     textDecoration: "none",
     fontSize: "0.95rem",
   },
-  header: { margin: "0 auto 36px", maxWidth: "860px", textAlign: "center" },
+  header: {
+    margin: "0 auto 36px",
+    maxWidth: "860px",
+    textAlign: "center",
+  },
   title: {
     color: "white",
     fontSize: "clamp(2.2rem, 6vw, 5rem)",
@@ -258,7 +286,7 @@ const styles = {
     padding: "18px",
   },
   kicker: {
-    color: "#f9a8d4",
+    color: "#a5b4fc",
     fontSize: "0.78rem",
     fontWeight: 900,
     letterSpacing: "0.08em",
@@ -284,7 +312,12 @@ const styles = {
     padding: "12px 14px",
     width: "100%",
   },
-  filterBar: { display: "flex", gap: "10px", marginBottom: "18px", flexWrap: "wrap" },
+  filterBar: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "18px",
+    flexWrap: "wrap",
+  },
   filter: {
     background: "rgba(30, 41, 59, 0.5)",
     border: "1px solid rgba(148, 163, 184, 0.18)",
@@ -297,10 +330,10 @@ const styles = {
     padding: "8px 18px",
   },
   filterActive: {
-    background: "rgba(236, 72, 153, 0.18)",
-    border: "1px solid rgba(236, 72, 153, 0.4)",
+    background: "rgba(124, 58, 237, 0.18)",
+    border: "1px solid rgba(167, 139, 250, 0.4)",
     borderRadius: "999px",
-    color: "#f9a8d4",
+    color: "#a5b4fc",
     cursor: "pointer",
     fontFamily: "inherit",
     fontSize: "0.88rem",
@@ -340,4 +373,4 @@ const styles = {
   emptyCopy: { color: "#94a3b8", fontSize: "0.95rem" },
 };
 
-export default Kanji;
+export default Vocabulary;

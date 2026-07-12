@@ -2,11 +2,10 @@ import { useState } from "react";
 
 const emptyForm = {
   kanji: "",
-  jlptLevel: "",
+  jlpt: "",
   meaning: "",
   onyomi: "",
   kunyomi: "",
-  example: "",
   notes: "",
 };
 
@@ -20,61 +19,11 @@ function formatJlptLevel(jlpt) {
 function getHardestJlptLevel(results) {
   const levels = results.map((result) => result.jlpt).filter(Boolean);
   if (levels.length === 0) return "";
-
   return formatJlptLevel(Math.min(...levels));
 }
 
 function joinUnique(values) {
   return [...new Set(values.filter(Boolean))].join(", ");
-}
-
-function getWordVariant(wordData) {
-  return wordData.variants?.[0] ?? {};
-}
-
-function formatWordEntry(wordData, fallbackWord = "") {
-  const variant = getWordVariant(wordData);
-  const partsOfSpeech = wordData.meanings?.[0]?.parts_of_speech || [];
-  return {
-    word: variant.written || fallbackWord,
-    reading: variant.pronounced || "",
-    meaning: (wordData.meanings?.[0]?.glosses || []).join(", "),
-    partsOfSpeech: partsOfSpeech.filter((part) => part !== "Wikipedia definition").join(", "),
-    source: partsOfSpeech.includes("Wikipedia definition") ? "Wikipedia entry via kanjiapi.dev" : "",
-  };
-}
-
-function formatJishoEntry(entry, fallbackWord = "") {
-  const japanese =
-    entry.japanese?.find((variant) => variant.word === fallbackWord || variant.word?.startsWith(fallbackWord)) ??
-    entry.japanese?.[0] ??
-    {};
-  const sense = entry.senses?.[0] ?? {};
-
-  return {
-    word: fallbackWord && japanese.word?.startsWith(fallbackWord) ? fallbackWord : japanese.word || fallbackWord,
-    reading: japanese.reading || "",
-    meaning: (sense.english_definitions || []).join(", "),
-    partsOfSpeech: (sense.parts_of_speech || []).join(", "),
-    source: "Jisho.org",
-  };
-}
-
-function isExactJishoMatch(entry, word) {
-  return entry.japanese?.some(
-    (variant) => variant.word === word || variant.word?.startsWith(word) || variant.reading === word,
-  );
-}
-
-async function fetchJishoWords(word) {
-  try {
-    const response = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
-    if (!response.ok) return [];
-    const data = await response.json();
-    return data.data || [];
-  } catch {
-    return [];
-  }
 }
 
 function buildKanjiNotes(data) {
@@ -84,12 +33,11 @@ function buildKanjiNotes(data) {
     data.stroke_count ? `${data.stroke_count} strokes` : "",
     data.freq ? `frequency rank ${data.freq}` : "",
   ].filter(Boolean);
-  const source = "Source: kanjiapi.dev kanji data.";
-
+  const source = "Source: kanjiapi.dev";
   return facts.length > 0 ? `${facts.join("; ")}. ${source}` : source;
 }
 
-function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }) {
+function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   const [formData, setFormData] = useState(editingEntry ?? emptyForm);
   const [loading, setLoading] = useState(false);
 
@@ -99,90 +47,35 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
 
     setLoading(true);
     try {
-      const kanjiCharacters = [...new Set(Array.from(kanjiStr).filter((char) => kanjiPattern.test(char)))];
-      if (kanjiCharacters.length === 0) {
-        throw new Error("No kanji found");
-      }
+      const kanjiChars = [...new Set(Array.from(kanjiStr).filter((c) => kanjiPattern.test(c)))];
+      if (kanjiChars.length === 0) throw new Error("No kanji found");
 
       const kanjiResults = await Promise.all(
-        kanjiCharacters.map(async (char) => {
-          const response = await fetch(`https://kanjiapi.dev/v1/kanji/${encodeURIComponent(char)}`);
-          if (!response.ok) {
-            throw new Error("Kanji not found");
-          }
-          return response.json();
+        kanjiChars.map(async (char) => {
+          const res = await fetch(`https://kanjiapi.dev/v1/kanji/${encodeURIComponent(char)}`);
+          if (!res.ok) throw new Error("Kanji not found");
+          return res.json();
         }),
       );
-      const wordLists = await Promise.all(
-        kanjiCharacters.map(async (char) => {
-          const response = await fetch(`https://kanjiapi.dev/v1/words/${encodeURIComponent(char)}`);
-          return response.ok ? response.json() : [];
-        }),
-      );
-      const wordResults = wordLists.flat();
-      const jishoResults = await fetchJishoWords(kanjiStr);
-      const exactJishoWord = jishoResults.find((entry) => isExactJishoMatch(entry, kanjiStr));
-      const matchingWord = wordResults.find((wordData) =>
-        wordData.variants?.some((variant) => variant.written === kanjiStr),
-      );
-      const kanjiApiSuggestions = wordResults
-        .map((wordData) => formatWordEntry(wordData))
-        .filter((word) => word.word && word.word !== kanjiStr);
-      const jishoSuggestions = jishoResults
-        .filter((entry) => !isExactJishoMatch(entry, kanjiStr))
-        .map((entry) => formatJishoEntry(entry))
-        .filter((word) => word.word && word.word !== kanjiStr);
-      const suggestions = [...jishoSuggestions, ...kanjiApiSuggestions]
-        .filter((word, index, words) => words.findIndex((item) => item.word === word.word) === index)
-        .slice(0, 8);
 
       const meanings = kanjiResults
         .map((data) => `${data.kanji}: ${(data.meanings || []).join(", ")}`)
         .join("; ");
       const onyomi = joinUnique(kanjiResults.flatMap((data) => data.on_readings || []));
       const kunyomi = joinUnique(kanjiResults.flatMap((data) => data.kun_readings || []));
-      const jlptLevel = getHardestJlptLevel(kanjiResults);
-      const isVocabulary = Array.from(kanjiStr).length > 1;
-      const matchedVocabulary = exactJishoWord
-        ? formatJishoEntry(exactJishoWord, kanjiStr)
-        : formatWordEntry(matchingWord ?? {}, kanjiStr);
-      const vocabularyEntry = isVocabulary
-        ? {
-            ...matchedVocabulary,
-            word: kanjiStr,
-            meaning: matchedVocabulary.meaning || "No exact dictionary definition found. Review this word before saving.",
-            jlptLevel,
-          }
-        : null;
-      const generatedKanjiEntries = kanjiResults.map((data) => ({
-        kanji: data.kanji,
-        jlptLevel: formatJlptLevel(data.jlpt),
-        meaning: (data.meanings || []).join(", "),
-        onyomi: (data.on_readings || []).join(", "),
-        kunyomi: (data.kun_readings || []).join(", "),
-        example: vocabularyEntry
-          ? `${vocabularyEntry.word}${vocabularyEntry.reading ? ` (${vocabularyEntry.reading})` : ""}`
-          : "",
-        notes: buildKanjiNotes(data),
-      }));
+      const jlpt = getHardestJlptLevel(kanjiResults);
+      const notes = kanjiResults.map((data) => buildKanjiNotes(data)).join(" | ");
 
-      setFormData((currentFormData) => ({
-        ...currentFormData,
-        jlptLevel,
-        meaning: vocabularyEntry?.meaning || meanings,
-        onyomi: onyomi,
-        kunyomi: kunyomi,
-        example:
-          currentFormData.example ||
-          (vocabularyEntry
-            ? `${vocabularyEntry.word}${vocabularyEntry.reading ? ` (${vocabularyEntry.reading})` : ""}`
-            : ""),
-        vocabularyEntry,
-        generatedKanjiEntries,
+      setFormData((prev) => ({
+        ...prev,
+        jlpt,
+        meaning: meanings,
+        onyomi,
+        kunyomi,
+        notes: prev.notes || notes,
       }));
-      onSuggestionsChange?.(suggestions);
     } catch {
-      alert("Kanji not found.");
+      alert("Kanji not found. Make sure the field contains valid kanji characters.");
     } finally {
       setLoading(false);
     }
@@ -190,25 +83,12 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleSubmit(event) {
     event.preventDefault();
-    const normalizedFormData = formData.vocabularyEntry
-      ? {
-          ...formData,
-          vocabularyEntry: {
-            ...formData.vocabularyEntry,
-            jlptLevel: formData.jlptLevel,
-            meaning: formData.meaning,
-          },
-        }
-      : formData;
-    onSubmit(normalizedFormData);
+    onSubmit(formData);
     setFormData(emptyForm);
   }
 
@@ -225,102 +105,63 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onSuggestionsChange }
         )}
       </div>
 
+      {/* Kanji + Auto Fill */}
       <label style={styles.label}>
         Kanji
-        <div style={styles.inputContainer}>
+        <div style={styles.inputRow}>
           <input
             required
             maxLength={12}
             name="kanji"
-            style={{ ...styles.input, marginTop: 0 }}
+            style={styles.inputNoMargin}
             value={formData.kanji}
             onChange={handleChange}
+            placeholder="e.g. 山 or 学習"
           />
           <button
             type="button"
             disabled={loading || !formData.kanji.trim()}
-            style={
-              loading || !formData.kanji.trim()
-                ? styles.autoFillButtonDisabled
-                : styles.autoFillButton
-            }
+            style={loading || !formData.kanji.trim() ? styles.autoFillDisabled : styles.autoFill}
             onClick={handleAutoFill}
           >
-            {loading ? "Loading..." : "Auto Fill"}
+            {loading ? "Loading…" : "Auto Fill"}
           </button>
         </div>
       </label>
 
+      {/* JLPT */}
       <label style={styles.label}>
         JLPT Level
-        <select
-          name="jlptLevel"
-          style={styles.input}
-          value={formData.jlptLevel ?? ""}
-          onChange={handleChange}
-        >
+        <select name="jlpt" style={styles.input} value={formData.jlpt ?? ""} onChange={handleChange}>
           <option value="">Unknown</option>
           {jlptOptions.map((level) => (
-            <option key={level} value={level}>
-              {level}
-            </option>
+            <option key={level} value={level}>{level}</option>
           ))}
         </select>
       </label>
 
+      {/* Meaning */}
       <label style={styles.label}>
         Meaning
-        <input
-          required
-          name="meaning"
-          style={styles.input}
-          value={formData.meaning}
-          onChange={handleChange}
-        />
+        <input required name="meaning" style={styles.input} value={formData.meaning} onChange={handleChange} />
       </label>
 
+      {/* Onyomi + Kunyomi */}
       <div style={styles.twoColumns}>
         <label style={styles.label}>
           Onyomi
-          <input
-            name="onyomi"
-            style={styles.input}
-            value={formData.onyomi}
-            onChange={handleChange}
-          />
+          <input name="onyomi" style={styles.input} value={formData.onyomi} onChange={handleChange} />
         </label>
-
         <label style={styles.label}>
           Kunyomi
-          <input
-            name="kunyomi"
-            style={styles.input}
-            value={formData.kunyomi}
-            onChange={handleChange}
-          />
+          <input name="kunyomi" style={styles.input} value={formData.kunyomi} onChange={handleChange} />
         </label>
       </div>
 
-      <label style={styles.label}>
-        Example
-        <input
-          required
-          name="example"
-          style={styles.input}
-          value={formData.example}
-          onChange={handleChange}
-        />
-      </label>
-
+      {/* Notes */}
       <label style={styles.label}>
         Notes
-        <textarea
-          name="notes"
-          rows={4}
-          style={styles.textarea}
-          value={formData.notes}
-          onChange={handleChange}
-        />
+        <textarea name="notes" rows={4} style={styles.textarea} value={formData.notes} onChange={handleChange} />
       </label>
 
       <button type="submit" style={styles.primaryButton}>
@@ -349,7 +190,7 @@ const styles = {
     border: "1px solid rgba(226, 232, 240, 0.16)",
     borderRadius: "12px",
     boxShadow: "0 18px 36px rgba(0, 0, 0, 0.28)",
-    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     padding: "24px",
     textAlign: "left",
   },
@@ -364,6 +205,7 @@ const styles = {
     fontSize: "1.45rem",
     fontWeight: 800,
     margin: 0,
+    fontFamily: "inherit",
   },
   label: {
     color: "#cbd5e1",
@@ -373,16 +215,14 @@ const styles = {
     marginBottom: "14px",
   },
   input: fieldBase,
-  textarea: {
-    ...fieldBase,
-    minHeight: "112px",
-    resize: "vertical",
-  },
+  inputNoMargin: { ...fieldBase, marginTop: 0 },
+  textarea: { ...fieldBase, minHeight: "100px", resize: "vertical" },
   twoColumns: {
     display: "grid",
     gap: "12px",
-    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
   },
+  inputRow: { display: "flex", gap: "10px", marginTop: "8px" },
   primaryButton: {
     background: "linear-gradient(135deg, #0d9488, #2563eb)",
     border: "none",
@@ -391,8 +231,10 @@ const styles = {
     cursor: "pointer",
     fontSize: "1rem",
     fontWeight: 900,
+    marginTop: "4px",
     padding: "13px 18px",
     width: "100%",
+    fontFamily: "inherit",
   },
   secondaryButton: {
     background: "rgba(148, 163, 184, 0.14)",
@@ -402,34 +244,33 @@ const styles = {
     cursor: "pointer",
     fontWeight: 800,
     padding: "8px 12px",
+    fontFamily: "inherit",
   },
-  inputContainer: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "8px",
-  },
-  autoFillButton: {
+  autoFill: {
     background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
     border: "none",
     borderRadius: "8px",
     color: "white",
     cursor: "pointer",
-    fontSize: "0.9rem",
+    fontSize: "0.88rem",
     fontWeight: 800,
-    padding: "12px 16px",
+    padding: "0 16px",
     whiteSpace: "nowrap",
-    transition: "opacity 0.2s ease",
+    flexShrink: 0,
+    fontFamily: "inherit",
   },
-  autoFillButtonDisabled: {
+  autoFillDisabled: {
     background: "rgba(148, 163, 184, 0.08)",
     border: "1px solid rgba(148, 163, 184, 0.15)",
     borderRadius: "8px",
     color: "#64748b",
     cursor: "not-allowed",
-    fontSize: "0.9rem",
+    fontSize: "0.88rem",
     fontWeight: 800,
-    padding: "12px 16px",
+    padding: "0 16px",
     whiteSpace: "nowrap",
+    flexShrink: 0,
+    fontFamily: "inherit",
   },
 };
 

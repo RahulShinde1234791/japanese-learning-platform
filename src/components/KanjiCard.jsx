@@ -2,6 +2,36 @@ import { useState } from "react";
 
 import StrokeOrder from "./StrokeOrder";
 
+const JLPT_COLORS = {
+  N5: { bg: "rgba(16, 185, 129, 0.18)", border: "rgba(16, 185, 129, 0.45)", text: "#6ee7b7" },
+  N4: { bg: "rgba(59, 130, 246, 0.18)", border: "rgba(59, 130, 246, 0.45)", text: "#93c5fd" },
+  N3: { bg: "rgba(139, 92, 246, 0.18)", border: "rgba(139, 92, 246, 0.45)", text: "#c4b5fd" },
+  N2: { bg: "rgba(245, 158, 11, 0.18)", border: "rgba(245, 158, 11, 0.45)", text: "#fcd34d" },
+  N1: { bg: "rgba(239, 68, 68, 0.18)", border: "rgba(239, 68, 68, 0.45)", text: "#fca5a5" },
+};
+
+function JlptBadge({ level }) {
+  if (!level) return null;
+  const colors = JLPT_COLORS[level] ?? {};
+  return (
+    <span
+      style={{
+        background: colors.bg,
+        border: `1px solid ${colors.border}`,
+        borderRadius: "6px",
+        color: colors.text,
+        fontSize: "0.72rem",
+        fontWeight: 900,
+        letterSpacing: "0.06em",
+        padding: "3px 8px",
+        textTransform: "uppercase",
+      }}
+    >
+      {level}
+    </span>
+  );
+}
+
 function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
   const [showStrokes, setShowStrokes] = useState(false);
   const [starAnimating, setStarAnimating] = useState(false);
@@ -15,37 +45,28 @@ function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
     <article style={styles.card}>
       <div style={styles.topRow}>
         <div style={styles.kanjiBlock}>
-          <div style={styles.kanjiHeader}>
-            <div style={styles.kanji}>{entry.kanji}</div>
-            <span style={styles.levelBadge}>{entry.jlptLevel || "Unknown"}</span>
+          <div style={styles.kanjiRow}>
+            <span style={styles.kanji}>{entry.kanji}</span>
+            <JlptBadge level={entry.jlpt} />
           </div>
           <div style={styles.meaning}>{entry.meaning}</div>
         </div>
 
         <div style={styles.actions}>
-          {/* Favourite star */}
           <button
             type="button"
             title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-            style={{
-              ...styles.starButton,
-              ...(isFavorite ? styles.starButtonActive : {}),
-            }}
+            style={isFavorite ? styles.starActive : styles.star}
             className={starAnimating ? "star-pop" : ""}
             onAnimationEnd={() => setStarAnimating(false)}
             onClick={handleToggleFavorite}
           >
             {isFavorite ? "⭐" : "☆"}
           </button>
-
-          <button type="button" style={styles.editButton} onClick={() => onEdit(entry)}>
+          <button type="button" style={styles.editBtn} onClick={() => onEdit(entry)}>
             Edit
           </button>
-          <button
-            type="button"
-            style={styles.deleteButton}
-            onClick={() => onDelete(entry.id)}
-          >
+          <button type="button" style={styles.deleteBtn} onClick={() => onDelete(entry.id)}>
             Delete
           </button>
         </div>
@@ -53,23 +74,21 @@ function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
 
       <dl style={styles.metaGrid}>
         <div style={styles.metaItem}>
-          <dt style={styles.label}>Onyomi</dt>
-          <dd style={styles.value}>{entry.onyomi || "—"}</dd>
+          <dt style={styles.metaLabel}>Onyomi</dt>
+          <dd style={styles.metaValue}>{entry.onyomi || "—"}</dd>
         </div>
         <div style={styles.metaItem}>
-          <dt style={styles.label}>Kunyomi</dt>
-          <dd style={styles.value}>{entry.kunyomi || "—"}</dd>
+          <dt style={styles.metaLabel}>Kunyomi</dt>
+          <dd style={styles.metaValue}>{entry.kunyomi || "—"}</dd>
         </div>
       </dl>
 
-      <p style={styles.example}>{entry.example}</p>
       {entry.notes && <p style={styles.notes}>{entry.notes}</p>}
 
-      {/* Stroke order toggle */}
       <button
         type="button"
-        style={showStrokes ? styles.strokeButtonActive : styles.strokeButton}
-        onClick={() => setShowStrokes((prev) => !prev)}
+        style={showStrokes ? styles.strokeBtnActive : styles.strokeBtn}
+        onClick={() => setShowStrokes((v) => !v)}
       >
         {showStrokes ? "Hide Strokes ▲" : "Show Strokes ▼"}
       </button>
@@ -89,10 +108,9 @@ const styles = {
     border: "1px solid rgba(226, 232, 240, 0.14)",
     borderRadius: "12px",
     boxShadow: "0 18px 36px rgba(0, 0, 0, 0.26)",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     padding: "22px",
     textAlign: "left",
-    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-    transition: "border-color 0.2s ease",
   },
   topRow: {
     alignItems: "flex-start",
@@ -100,32 +118,21 @@ const styles = {
     gap: "16px",
     justifyContent: "space-between",
   },
-  kanjiBlock: {
-    minWidth: 0,
-  },
-  kanjiHeader: {
+  kanjiBlock: { minWidth: 0 },
+  kanjiRow: {
     alignItems: "center",
     display: "flex",
-    flexWrap: "wrap",
     gap: "10px",
+    flexWrap: "wrap",
   },
   kanji: {
     color: "#f8fafc",
-    fontSize: "clamp(2.8rem, 8vw, 4rem)",
+    fontSize: "clamp(2.6rem, 8vw, 4rem)",
     fontWeight: 800,
     lineHeight: 1,
   },
-  levelBadge: {
-    background: "rgba(20, 184, 166, 0.14)",
-    border: "1px solid rgba(94, 234, 212, 0.3)",
-    borderRadius: "999px",
-    color: "#99f6e4",
-    fontSize: "0.76rem",
-    fontWeight: 900,
-    padding: "5px 9px",
-  },
   meaning: {
-    color: "#fbbf24",
+    color: "#f9a8d4",
     fontSize: "1rem",
     fontWeight: 800,
     marginTop: "10px",
@@ -137,48 +144,51 @@ const styles = {
     gap: "8px",
     flexShrink: 0,
   },
-  starButton: {
+  star: {
     background: "rgba(71, 85, 105, 0.2)",
     border: "1px solid rgba(148, 163, 184, 0.2)",
     borderRadius: "8px",
     color: "#94a3b8",
     cursor: "pointer",
     fontSize: "1.1rem",
-    fontWeight: 800,
-    padding: "7px 11px",
-    transition: "background 0.2s, color 0.2s",
     lineHeight: 1,
+    padding: "7px 11px",
   },
-  starButtonActive: {
+  starActive: {
     background: "rgba(251, 191, 36, 0.15)",
     border: "1px solid rgba(251, 191, 36, 0.35)",
+    borderRadius: "8px",
     color: "#fbbf24",
+    cursor: "pointer",
+    fontSize: "1.1rem",
+    lineHeight: 1,
+    padding: "7px 11px",
   },
-  editButton: {
+  editBtn: {
     background: "rgba(96, 165, 250, 0.18)",
     border: "1px solid rgba(147, 197, 253, 0.35)",
     borderRadius: "8px",
     color: "#bfdbfe",
     cursor: "pointer",
+    fontFamily: "inherit",
     fontWeight: 800,
     padding: "8px 12px",
-    fontFamily: "inherit",
   },
-  deleteButton: {
+  deleteBtn: {
     background: "rgba(244, 63, 94, 0.16)",
     border: "1px solid rgba(251, 113, 133, 0.32)",
     borderRadius: "8px",
     color: "#fecdd3",
     cursor: "pointer",
+    fontFamily: "inherit",
     fontWeight: 800,
     padding: "8px 12px",
-    fontFamily: "inherit",
   },
   metaGrid: {
     display: "grid",
     gap: "10px",
     gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
-    margin: "22px 0 0",
+    margin: "20px 0 0",
   },
   metaItem: {
     background: "rgba(30, 41, 59, 0.68)",
@@ -186,7 +196,7 @@ const styles = {
     borderRadius: "8px",
     padding: "12px",
   },
-  label: {
+  metaLabel: {
     color: "#94a3b8",
     fontSize: "0.72rem",
     fontWeight: 800,
@@ -194,25 +204,19 @@ const styles = {
     marginBottom: "6px",
     textTransform: "uppercase",
   },
-  value: {
+  metaValue: {
     color: "#f8fafc",
     fontSize: "0.97rem",
     margin: 0,
     wordBreak: "break-word",
   },
-  example: {
-    color: "#e2e8f0",
-    fontSize: "1rem",
-    lineHeight: 1.5,
-    marginTop: "18px",
-  },
   notes: {
     color: "#cbd5e1",
-    fontSize: "0.95rem",
-    lineHeight: 1.5,
-    marginTop: "12px",
+    fontSize: "0.9rem",
+    lineHeight: 1.55,
+    marginTop: "14px",
   },
-  strokeButton: {
+  strokeBtn: {
     marginTop: "16px",
     width: "100%",
     background: "rgba(30, 41, 59, 0.5)",
@@ -220,14 +224,13 @@ const styles = {
     borderRadius: "8px",
     color: "#94a3b8",
     cursor: "pointer",
+    fontFamily: "inherit",
     fontSize: "0.82rem",
     fontWeight: 700,
     letterSpacing: "0.04em",
     padding: "9px 14px",
-    transition: "background 0.2s, color 0.2s, border-color 0.2s",
-    fontFamily: "inherit",
   },
-  strokeButtonActive: {
+  strokeBtnActive: {
     marginTop: "16px",
     width: "100%",
     background: "rgba(59, 130, 246, 0.12)",
@@ -235,12 +238,11 @@ const styles = {
     borderRadius: "8px",
     color: "#93c5fd",
     cursor: "pointer",
+    fontFamily: "inherit",
     fontSize: "0.82rem",
     fontWeight: 700,
     letterSpacing: "0.04em",
     padding: "9px 14px",
-    transition: "background 0.2s, color 0.2s, border-color 0.2s",
-    fontFamily: "inherit",
   },
   strokeWrapper: {
     animation: "fadeSlideIn 0.25s ease",

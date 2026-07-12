@@ -55,7 +55,7 @@ const styles = {
   },
   cellHover: {
     background: "rgba(30, 41, 59, 0.98)",
-    borderColor: "rgba(249, 168, 212, 0.9)",
+    border: "1px solid rgba(249, 168, 212, 0.9)",
     transform: "translateY(-3px)",
     zIndex: 3,
   },
