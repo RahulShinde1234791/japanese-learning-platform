@@ -3,42 +3,100 @@ import { Link } from "react-router-dom";
 
 import KanjiCard from "../components/KanjiCard";
 import KanjiForm from "../components/KanjiForm";
+import VocabularyCard from "../components/VocabularyCard";
+import VocabularyForm from "../components/VocabularyForm";
 import kanjiDefaults from "../data/kanjiDefaults";
+import vocabularyDefaults from "../data/vocabularyDefaults";
 import {
   loadKanji,
   loadKanjiFavorites,
   saveKanji,
   saveKanjiFavorites,
+  loadVocabulary,
+  loadVocabularyFavorites,
+  saveVocabulary,
+  saveVocabularyFavorites,
 } from "../utils/localStorage";
 
 const floatingKanji = ["漢", "字", "学", "日", "人", "山", "水", "火", "木", "金", "土", "月"];
+const kanjiPattern = /\p{Script=Han}/u;
+
+function hasKanjiMeaningFallback(entry) {
+  const kanjiChars = Array.from(entry.word || "").filter((char) => kanjiPattern.test(char));
+  if (kanjiChars.length < 2 || !entry.meaning) return false;
+  return kanjiChars.some((char) => entry.meaning.includes(`${char}:`));
+}
+
+function buildExampleSentence(word) {
+  if (!word) return "";
+  if (word.endsWith("る")) return `${word}ことが好きです。`;
+  return `${word}を使います。`;
+}
+
+function normalizeVocabularyEntry(entry) {
+  return {
+    ...entry,
+    meaning: hasKanjiMeaningFallback(entry) ? "" : entry.meaning,
+    exampleSentence: entry.exampleSentence || buildExampleSentence(entry.word),
+  };
+}
 
 function Kanji() {
   const [kanjiEntries, setKanjiEntries] = useState(() => loadKanji() ?? kanjiDefaults);
+  const [vocabEntries, setVocabEntries] = useState(() =>
+    (loadVocabulary() ?? vocabularyDefaults).map(normalizeVocabularyEntry),
+  );
+  
+  const [activeForm, setActiveForm] = useState("kanji"); // "kanji" or "vocab"
   const [editingEntry, setEditingEntry] = useState(null);
+  
   const [searchTerm, setSearchTerm] = useState("");
-  const [favorites, setFavorites] = useState(() => loadKanjiFavorites());
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [kanjiFavorites, setKanjiFavorites] = useState(() => loadKanjiFavorites());
+  const [vocabFavorites, setVocabFavorites] = useState(() => loadVocabularyFavorites());
+  
+  const [activeFilter, setActiveFilter] = useState("all"); // "all", "favorites", "N5", "N4", "N3", "N2", "N1"
 
   useEffect(() => { saveKanji(kanjiEntries); }, [kanjiEntries]);
-  useEffect(() => { saveKanjiFavorites(favorites); }, [favorites]);
+  useEffect(() => { saveKanjiFavorites(kanjiFavorites); }, [kanjiFavorites]);
+  useEffect(() => { saveVocabulary(vocabEntries); }, [vocabEntries]);
+  useEffect(() => { saveVocabularyFavorites(vocabFavorites); }, [vocabFavorites]);
 
   const filteredEntries = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    let list = showFavoritesOnly
-      ? kanjiEntries.filter((e) => favorites.has(e.id))
-      : kanjiEntries;
-    if (!q) return list;
-    return list.filter((e) =>
-      [e.kanji, e.meaning, e.onyomi, e.kunyomi, e.jlpt, e.notes]
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [kanjiEntries, searchTerm, favorites, showFavoritesOnly]);
+    
+    let kList = kanjiEntries.map(e => ({ ...e, type: "kanji" }));
+    let vList = vocabEntries.map(e => ({ ...e, type: "vocab" }));
 
-  function handleSubmit(formData) {
-    if (editingEntry) {
+    if (activeFilter === "favorites") {
+      kList = kList.filter((e) => kanjiFavorites.has(e.id));
+      vList = vList.filter((e) => vocabFavorites.has(e.id));
+    } else if (activeFilter !== "all") {
+      // It's a JLPT filter like "N5"
+      kList = kList.filter((e) => e.jlpt === activeFilter);
+      vList = []; // Vocab doesn't have JLPT levels in our model, or we just hide vocab when JLPT filter is active
+    }
+
+    let combined = [...kList, ...vList].sort((a, b) => (b.id || 0) - (a.id || 0));
+
+    if (!q) return combined;
+    
+    return combined.filter((e) => {
+      if (e.type === "kanji") {
+        return [e.kanji, e.meaning, e.onyomi, e.kunyomi, e.jlpt, e.notes]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      } else {
+        return [e.word, e.reading, e.meaning, e.exampleSentence, e.notes]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      }
+    });
+  }, [kanjiEntries, vocabEntries, searchTerm, kanjiFavorites, vocabFavorites, activeFilter]);
+
+  function handleKanjiSubmit(formData) {
+    if (editingEntry && editingEntry.type === "kanji") {
       setKanjiEntries((prev) =>
         prev.map((e) => (e.id === editingEntry.id ? { ...formData, id: editingEntry.id } : e)),
       );
@@ -48,22 +106,55 @@ function Kanji() {
     setKanjiEntries((prev) => [{ ...formData, id: Date.now() }, ...prev]);
   }
 
-  function handleDelete(id) {
-    setKanjiEntries((prev) => prev.filter((e) => e.id !== id));
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+  function handleVocabSubmit(formData) {
+    if (editingEntry && editingEntry.type === "vocab") {
+      setVocabEntries((prev) =>
+        prev.map((e) => (e.id === editingEntry.id ? { ...formData, id: editingEntry.id } : e)),
+      );
+      setEditingEntry(null);
+      return;
+    }
+    setVocabEntries((prev) => [{ ...formData, id: Date.now() }, ...prev]);
+  }
+
+  function handleDelete(id, type) {
+    if (type === "kanji") {
+      setKanjiEntries((prev) => prev.filter((e) => e.id !== id));
+      setKanjiFavorites((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      setVocabEntries((prev) => prev.filter((e) => e.id !== id));
+      setVocabFavorites((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
     if (editingEntry?.id === id) setEditingEntry(null);
   }
 
-  function handleToggleFavorite(id) {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  function handleToggleFavorite(id, type) {
+    if (type === "kanji") {
+      setKanjiFavorites((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+    } else {
+      setVocabFavorites((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+    }
+  }
+
+  function startEditing(entry) {
+    setActiveForm(entry.type);
+    setEditingEntry(entry);
   }
 
   return (
@@ -89,31 +180,57 @@ function Kanji() {
         <Link to="/" style={styles.backLink}>← Home</Link>
 
         <header style={styles.header}>
-          <p style={styles.heroKicker}>漢字ノート</p>
-          <h1 style={styles.title}>Kanji Notes</h1>
+          <p style={styles.heroKicker}>漢字ノートと語彙</p>
+          <h1 style={styles.title}>Kanji & Vocab</h1>
           <p style={styles.subtitle}>
-            Build a personal kanji notebook with meanings, readings, and study notes.
+            Build your personal kanji and vocabulary notebook with meanings, readings, and study notes.
           </p>
         </header>
 
       <main style={styles.layout}>
         <aside style={styles.sidebar}>
-          <KanjiForm
-            key={editingEntry?.id ?? "new-kanji"}
-            editingEntry={editingEntry}
-            onCancelEdit={() => setEditingEntry(null)}
-            onSubmit={handleSubmit}
-          />
+          <div style={styles.formToggle}>
+            <button 
+              type="button" 
+              style={activeForm === "kanji" ? styles.formTabActive : styles.formTab}
+              onClick={() => { setActiveForm("kanji"); setEditingEntry(null); }}
+            >
+              Kanji
+            </button>
+            <button 
+              type="button" 
+              style={activeForm === "vocab" ? styles.formTabActive : styles.formTab}
+              onClick={() => { setActiveForm("vocab"); setEditingEntry(null); }}
+            >
+              Vocabulary
+            </button>
+          </div>
+
+          {activeForm === "kanji" ? (
+            <KanjiForm
+              key={editingEntry?.id ?? "new-kanji"}
+              editingEntry={editingEntry?.type === "kanji" ? editingEntry : null}
+              onCancelEdit={() => setEditingEntry(null)}
+              onSubmit={handleKanjiSubmit}
+            />
+          ) : (
+            <VocabularyForm
+              key={editingEntry?.id ?? "new-vocab"}
+              editingEntry={editingEntry?.type === "vocab" ? editingEntry : null}
+              onCancelEdit={() => setEditingEntry(null)}
+              onSubmit={handleVocabSubmit}
+            />
+          )}
         </aside>
 
         <section style={styles.content}>
           <div style={styles.searchPanel}>
             <div>
               <p style={styles.kicker}>Collection</p>
-              <h2 style={styles.sectionTitle}>{kanjiEntries.length} saved kanji</h2>
+              <h2 style={styles.sectionTitle}>{kanjiEntries.length + vocabEntries.length} saved entries</h2>
             </div>
             <input
-              placeholder="Search kanji, readings, meanings…"
+              placeholder="Search kanji, words, readings, meanings…"
               style={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -123,43 +240,89 @@ function Kanji() {
           <div style={styles.filterBar}>
             <button
               type="button"
-              style={!showFavoritesOnly ? styles.filterActive : styles.filter}
-              onClick={() => setShowFavoritesOnly(false)}
+              style={activeFilter === "all" ? styles.filterActive : styles.filter}
+              onClick={() => setActiveFilter("all")}
             >
-              All ({kanjiEntries.length})
+              All ({kanjiEntries.length + vocabEntries.length})
             </button>
             <button
               type="button"
-              style={showFavoritesOnly ? styles.filterFavActive : styles.filter}
-              onClick={() => setShowFavoritesOnly(true)}
+              style={activeFilter === "favorites" ? styles.filterFavActive : styles.filter}
+              onClick={() => setActiveFilter("favorites")}
             >
-              ⭐ Favorites ({favorites.size})
+              ⭐ Favorites ({kanjiFavorites.size + vocabFavorites.size})
+            </button>
+            <button
+              type="button"
+              style={activeFilter === "N5" ? styles.filterJlptActive : styles.filter}
+              onClick={() => setActiveFilter("N5")}
+            >
+              N5
+            </button>
+            <button
+              type="button"
+              style={activeFilter === "N4" ? styles.filterJlptActive : styles.filter}
+              onClick={() => setActiveFilter("N4")}
+            >
+              N4
+            </button>
+            <button
+              type="button"
+              style={activeFilter === "N3" ? styles.filterJlptActive : styles.filter}
+              onClick={() => setActiveFilter("N3")}
+            >
+              N3
+            </button>
+            <button
+              type="button"
+              style={activeFilter === "N2" ? styles.filterJlptActive : styles.filter}
+              onClick={() => setActiveFilter("N2")}
+            >
+              N2
+            </button>
+            <button
+              type="button"
+              style={activeFilter === "N1" ? styles.filterJlptActive : styles.filter}
+              onClick={() => setActiveFilter("N1")}
+            >
+              N1
             </button>
           </div>
 
           {filteredEntries.length > 0 ? (
             <div style={styles.cardGrid}>
               {filteredEntries.map((entry) => (
-                <KanjiCard
-                  key={entry.id}
-                  entry={entry}
-                  isFavorite={favorites.has(entry.id)}
-                  onDelete={handleDelete}
-                  onEdit={setEditingEntry}
-                  onToggleFavorite={handleToggleFavorite}
-                />
+                entry.type === "kanji" ? (
+                  <KanjiCard
+                    key={`k-${entry.id}`}
+                    entry={entry}
+                    isFavorite={kanjiFavorites.has(entry.id)}
+                    onDelete={(id) => handleDelete(id, "kanji")}
+                    onEdit={startEditing}
+                    onToggleFavorite={(id) => handleToggleFavorite(id, "kanji")}
+                  />
+                ) : (
+                  <VocabularyCard
+                    key={`v-${entry.id}`}
+                    entry={entry}
+                    isFavorite={vocabFavorites.has(entry.id)}
+                    onDelete={(id) => handleDelete(id, "vocab")}
+                    onEdit={startEditing}
+                    onToggleFavorite={(id) => handleToggleFavorite(id, "vocab")}
+                  />
+                )
               ))}
             </div>
           ) : (
             <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>{showFavoritesOnly ? "⭐" : "🔍"}</div>
+              <div style={styles.emptyIcon}>{activeFilter === "favorites" ? "⭐" : "🔍"}</div>
               <h2 style={styles.emptyTitle}>
-                {showFavoritesOnly ? "No favorites yet" : "No kanji found"}
+                {activeFilter === "favorites" ? "No favorites yet" : "No entries found"}
               </h2>
               <p style={styles.emptyCopy}>
-                {showFavoritesOnly
-                  ? "Star a kanji card to add it to your favorites."
-                  : "Try a different search or add a new entry."}
+                {activeFilter === "favorites"
+                  ? "Star an entry to add it to your favorites."
+                  : "Try a different search, filter, or add a new entry."}
               </p>
             </div>
           )}
@@ -244,6 +407,38 @@ const styles = {
     maxWidth: "1240px",
   },
   sidebar: { position: "sticky", top: "24px" },
+  formToggle: {
+    display: "flex",
+    gap: "8px",
+    marginBottom: "16px",
+    background: "rgba(15, 23, 42, 0.78)",
+    padding: "6px",
+    borderRadius: "12px",
+    border: "1px solid rgba(226, 232, 240, 0.16)",
+  },
+  formTab: {
+    flex: 1,
+    background: "transparent",
+    border: "none",
+    color: "#94a3b8",
+    padding: "10px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: 800,
+    fontSize: "0.9rem",
+  },
+  formTabActive: {
+    flex: 1,
+    background: "rgba(255, 255, 255, 0.1)",
+    border: "none",
+    color: "#f8fafc",
+    padding: "10px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: 800,
+    fontSize: "0.9rem",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+  },
   content: { minWidth: 0 },
   searchPanel: {
     alignItems: "center",
@@ -312,6 +507,17 @@ const styles = {
     border: "1px solid rgba(251, 191, 36, 0.35)",
     borderRadius: "999px",
     color: "#fbbf24",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.88rem",
+    fontWeight: 700,
+    padding: "8px 18px",
+  },
+  filterJlptActive: {
+    background: "rgba(16, 185, 129, 0.18)",
+    border: "1px solid rgba(16, 185, 129, 0.45)",
+    borderRadius: "999px",
+    color: "#6ee7b7",
     cursor: "pointer",
     fontFamily: "inherit",
     fontSize: "0.88rem",

@@ -26,13 +26,6 @@ function Home() {
       gradient: "linear-gradient(135deg, #ec4899, #db2777)",
       path: "/kanji",
     },
-    {
-      title: "Vocabulary",
-      kana: "語",
-      description: "Save words with readings, meanings, and example sentences.",
-      gradient: "linear-gradient(135deg, #6d28d9, #4338ca)",
-      path: "/vocabulary",
-    },
   ];
 
   return (
