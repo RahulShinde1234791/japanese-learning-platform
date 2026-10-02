@@ -40,6 +40,7 @@ function buildKanjiNotes(data) {
 function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   const [formData, setFormData] = useState(editingEntry ?? emptyForm);
   const [loading, setLoading] = useState(false);
+  const [quickAddText, setQuickAddText] = useState("");
 
   async function handleAutoFill() {
     const kanjiStr = formData.kanji.trim();
@@ -86,6 +87,12 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
+    const quickAddCharacters = [
+      ...new Set(
+        Array.from(quickAddText).filter((char) => kanjiPattern.test(char))
+      ),
+    ];
+
   function handleSubmit(event) {
     event.preventDefault();
     onSubmit(formData);
@@ -104,6 +111,40 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
           </button>
         )}
       </div>
+
+      {!isEditing && (
+        <div style={styles.quickAddSection}>
+          <div style={styles.quickAddTitle}>Quick Add</div>
+
+          <p style={styles.quickAddDescription}>
+            Enter multiple kanji to prepare them for individual lookup.
+          </p>
+
+          <input
+            type="text"
+            value={quickAddText}
+            onChange={(event) => setQuickAddText(event.target.value)}
+            placeholder="e.g. 日本語"
+            style={styles.input}
+          />
+
+          {quickAddCharacters.length > 0 && (
+            <div style={styles.quickAddPreview}>
+              <div style={styles.quickAddPreviewLabel}>
+                Characters found
+              </div>
+
+              <div style={styles.quickAddCharacters}>
+                {quickAddCharacters.map((char) => (
+                  <div key={char} style={styles.quickAddCharacter}>
+                    {char}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Kanji + Auto Fill */}
       <label style={styles.label}>
@@ -271,6 +312,59 @@ const styles = {
     whiteSpace: "nowrap",
     flexShrink: 0,
     fontFamily: "inherit",
+  },
+
+  quickAddSection: {
+    background: "rgba(30, 41, 59, 0.45)",
+    border: "1px solid rgba(249, 168, 212, 0.18)",
+    borderRadius: "10px",
+    marginBottom: "22px",
+    padding: "16px",
+  },
+
+  quickAddTitle: {
+    color: "#f9a8d4",
+    fontSize: "1rem",
+    fontWeight: 900,
+    marginBottom: "4px",
+  },
+
+  quickAddDescription: {
+    color: "#94a3b8",
+    fontSize: "0.82rem",
+    lineHeight: 1.5,
+    margin: "0 0 12px",
+  },
+
+  quickAddPreview: {
+    marginTop: "14px",
+  },
+
+  quickAddPreviewLabel: {
+    color: "#cbd5e1",
+    fontSize: "0.78rem",
+    fontWeight: 800,
+    marginBottom: "8px",
+  },
+
+  quickAddCharacters: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+  },
+
+  quickAddCharacter: {
+    alignItems: "center",
+    background: "rgba(236, 72, 153, 0.12)",
+    border: "1px solid rgba(249, 168, 212, 0.3)",
+    borderRadius: "8px",
+    color: "#f9a8d4",
+    display: "flex",
+    fontSize: "1.4rem",
+    fontWeight: 900,
+    height: "48px",
+    justifyContent: "center",
+    width: "48px",
   },
 };
 
