@@ -63,37 +63,60 @@ function Kanji() {
 
   const filteredEntries = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    
-    let kList = kanjiEntries.map(e => ({ ...e, type: "kanji" }));
-    let vList = vocabEntries.map(e => ({ ...e, type: "vocab" }));
+
+    const isKanjiTab = activeForm === "kanji";
+
+    let entries = isKanjiTab
+      ? kanjiEntries.map((entry) => ({ ...entry, type: "kanji" }))
+      : vocabEntries.map((entry) => ({ ...entry, type: "vocab" }));
 
     if (activeFilter === "favorites") {
-      kList = kList.filter((e) => kanjiFavorites.has(e.id));
-      vList = vList.filter((e) => vocabFavorites.has(e.id));
-    } else if (activeFilter !== "all") {
-      // It's a JLPT filter like "N5"
-      kList = kList.filter((e) => e.jlpt === activeFilter);
-      vList = []; // Vocab doesn't have JLPT levels in our model, or we just hide vocab when JLPT filter is active
+      entries = isKanjiTab
+        ? entries.filter((entry) => kanjiFavorites.has(entry.id))
+        : entries.filter((entry) => vocabFavorites.has(entry.id));
+    } else if (isKanjiTab && activeFilter !== "all") {
+      entries = entries.filter((entry) => entry.jlpt === activeFilter);
     }
 
-    let combined = [...kList, ...vList].sort((a, b) => (b.id || 0) - (a.id || 0));
+    if (q) {
+      entries = entries.filter((entry) => {
+        if (isKanjiTab) {
+          return [
+            entry.kanji,
+            entry.meaning,
+            entry.onyomi,
+            entry.kunyomi,
+            entry.jlpt,
+            entry.notes,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(q);
+        }
 
-    if (!q) return combined;
-    
-    return combined.filter((e) => {
-      if (e.type === "kanji") {
-        return [e.kanji, e.meaning, e.onyomi, e.kunyomi, e.jlpt, e.notes]
+        return [
+          entry.word,
+          entry.reading,
+          entry.meaning,
+          entry.exampleSentence,
+          entry.notes,
+        ]
           .join(" ")
           .toLowerCase()
           .includes(q);
-      } else {
-        return [e.word, e.reading, e.meaning, e.exampleSentence, e.notes]
-          .join(" ")
-          .toLowerCase()
-          .includes(q);
-      }
-    });
-  }, [kanjiEntries, vocabEntries, searchTerm, kanjiFavorites, vocabFavorites, activeFilter]);
+      });
+    }
+
+    return entries.sort((a, b) => (b.id || 0) - (a.id || 0));
+  }, [
+    activeForm,
+    kanjiEntries,
+    vocabEntries,
+    searchTerm,
+    kanjiFavorites,
+    vocabFavorites,
+    activeFilter,
+  ]);
 
   function handleKanjiSubmit(formData) {
     if (editingEntry && editingEntry.type === "kanji") {
@@ -189,24 +212,34 @@ function Kanji() {
           </p>
         </header>
 
+      <div style={styles.pageTabs}>
+        <button
+          type="button"
+          style={activeForm === "kanji" ? styles.pageTabActive : styles.pageTab}
+          onClick={() => {
+            setActiveForm("kanji");
+            setEditingEntry(null);
+            setActiveFilter("all");
+          }}
+        >
+          Kanji
+        </button>
+
+        <button
+          type="button"
+          style={activeForm === "vocab" ? styles.pageTabActive : styles.pageTab}
+          onClick={() => {
+            setActiveForm("vocab");
+            setEditingEntry(null);
+            setActiveFilter("all");
+          }}
+        >
+          Vocabulary
+        </button>
+      </div>
+
       <main style={styles.layout}>
         <aside style={styles.sidebar}>
-          <div style={styles.formToggle}>
-            <button 
-              type="button" 
-              style={activeForm === "kanji" ? styles.formTabActive : styles.formTab}
-              onClick={() => { setActiveForm("kanji"); setEditingEntry(null); }}
-            >
-              Kanji
-            </button>
-            <button 
-              type="button" 
-              style={activeForm === "vocab" ? styles.formTabActive : styles.formTab}
-              onClick={() => { setActiveForm("vocab"); setEditingEntry(null); }}
-            >
-              Vocabulary
-            </button>
-          </div>
 
           {activeForm === "kanji" ? (
             <KanjiForm
@@ -229,10 +262,18 @@ function Kanji() {
           <div style={styles.searchPanel}>
             <div>
               <p style={styles.kicker}>Collection</p>
-              <h2 style={styles.sectionTitle}>{kanjiEntries.length + vocabEntries.length} saved entries</h2>
+              <h2 style={styles.sectionTitle}>
+                {activeForm === "kanji"
+                  ? `${kanjiEntries.length} saved kanji`
+                  : `${vocabEntries.length} saved words`}
+              </h2>
             </div>
             <input
-              placeholder="Search kanji, words, readings, meanings…"
+              placeholder={
+                activeForm === "kanji"
+                  ? "Search kanji, readings, meanings…"
+                  : "Search words, readings, meanings…"
+              }
               style={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -245,51 +286,59 @@ function Kanji() {
               style={activeFilter === "all" ? styles.filterActive : styles.filter}
               onClick={() => setActiveFilter("all")}
             >
-              All ({kanjiEntries.length + vocabEntries.length})
+              All ({activeForm === "kanji" ? kanjiEntries.length : vocabEntries.length})
             </button>
             <button
               type="button"
               style={activeFilter === "favorites" ? styles.filterFavActive : styles.filter}
               onClick={() => setActiveFilter("favorites")}
             >
-              ⭐ Favorites ({kanjiFavorites.size + vocabFavorites.size})
+              ⭐ Favorites (
+                {activeForm === "kanji"
+                  ? kanjiFavorites.size
+                  : vocabFavorites.size}
+              )
             </button>
-            <button
-              type="button"
-              style={activeFilter === "N5" ? styles.filterJlptActive : styles.filter}
-              onClick={() => setActiveFilter("N5")}
-            >
-              N5
-            </button>
-            <button
-              type="button"
-              style={activeFilter === "N4" ? styles.filterJlptActive : styles.filter}
-              onClick={() => setActiveFilter("N4")}
-            >
-              N4
-            </button>
-            <button
-              type="button"
-              style={activeFilter === "N3" ? styles.filterJlptActive : styles.filter}
-              onClick={() => setActiveFilter("N3")}
-            >
-              N3
-            </button>
-            <button
-              type="button"
-              style={activeFilter === "N2" ? styles.filterJlptActive : styles.filter}
-              onClick={() => setActiveFilter("N2")}
-            >
-              N2
-            </button>
-            <button
-              type="button"
-              style={activeFilter === "N1" ? styles.filterJlptActive : styles.filter}
-              onClick={() => setActiveFilter("N1")}
-            >
-              N1
-            </button>
-          </div>
+            {activeForm === "kanji" && (
+              <>
+                <button
+                  type="button"
+                  style={activeFilter === "N5" ? styles.filterJlptActive : styles.filter}
+                  onClick={() => setActiveFilter("N5")}
+                >
+                  N5
+                </button>
+                <button
+                  type="button"
+                  style={activeFilter === "N4" ? styles.filterJlptActive : styles.filter}
+                  onClick={() => setActiveFilter("N4")}
+                >
+                  N4
+                </button>
+                <button
+                  type="button"
+                  style={activeFilter === "N3" ? styles.filterJlptActive : styles.filter}
+                  onClick={() => setActiveFilter("N3")}
+                >
+                  N3
+                </button>
+                <button
+                  type="button"
+                  style={activeFilter === "N2" ? styles.filterJlptActive : styles.filter}
+                  onClick={() => setActiveFilter("N2")}
+                >
+                  N2
+                </button>
+                <button
+                  type="button"
+                  style={activeFilter === "N1" ? styles.filterJlptActive : styles.filter}
+                  onClick={() => setActiveFilter("N1")}
+                >
+                  N1
+                </button>
+              </>
+            )}
+            </div>
 
           {filteredEntries.length > 0 ? (
             <div style={styles.cardGrid}>
@@ -431,36 +480,41 @@ const styles = {
     maxWidth: "1240px",
   },
   sidebar: { position: "sticky", top: "24px" },
-  formToggle: {
+  pageTabs: {
     display: "flex",
     gap: "8px",
-    marginBottom: "16px",
+    margin: "0 auto 24px",
+    maxWidth: "1240px",
     background: "rgba(15, 23, 42, 0.78)",
     padding: "6px",
     borderRadius: "12px",
     border: "1px solid rgba(226, 232, 240, 0.16)",
   },
-  formTab: {
+
+  pageTab: {
     flex: 1,
     background: "transparent",
     border: "none",
     color: "#94a3b8",
-    padding: "10px",
+    padding: "12px",
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: 800,
-    fontSize: "0.9rem",
+    fontSize: "1rem",
+    fontFamily: "inherit",
   },
-  formTabActive: {
+
+  pageTabActive: {
     flex: 1,
     background: "rgba(255, 255, 255, 0.1)",
     border: "none",
     color: "#f8fafc",
-    padding: "10px",
+    padding: "12px",
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: 800,
-    fontSize: "0.9rem",
+    fontSize: "1rem",
+    fontFamily: "inherit",
     boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
   },
   content: { minWidth: 0 },
