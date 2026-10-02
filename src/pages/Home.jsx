@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 
-import sakuraTreeHero from "../assets/sakura-tree-hero.png";
 
 function Home() {
   const navigate = useNavigate();
@@ -30,8 +29,6 @@ function Home() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.backgroundImage} />
-      <div style={styles.backgroundOverlay} />
       <div style={styles.sakuraLeft}>🌸</div>
       <div style={styles.sakuraCenter}>🌸</div>
       <div style={styles.sakuraRight}>🌸</div>
@@ -109,32 +106,14 @@ function Home() {
 const styles = {
   page: {
     minHeight: "100vh",
-    background:
-      "linear-gradient(135deg, #07111f 0%, #082f3a 48%, #0b1220 100%)",
+    backgroundColor: "#0d1117",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.05' stroke-width='1.5'%3E%3Ccircle cx='30' cy='30' r='30'/%3E%3Ccircle cx='30' cy='30' r='24'/%3E%3Ccircle cx='30' cy='30' r='18'/%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Ccircle cx='30' cy='30' r='6'/%3E%3Ccircle cx='0' cy='60' r='30'/%3E%3Ccircle cx='0' cy='60' r='24'/%3E%3Ccircle cx='0' cy='60' r='18'/%3E%3Ccircle cx='0' cy='60' r='12'/%3E%3Ccircle cx='0' cy='60' r='6'/%3E%3Ccircle cx='60' cy='60' r='30'/%3E%3Ccircle cx='60' cy='60' r='24'/%3E%3Ccircle cx='60' cy='60' r='18'/%3E%3Ccircle cx='60' cy='60' r='12'/%3E%3Ccircle cx='60' cy='60' r='6'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(135deg, #0b1120 0%, #030712 100%)`,
     color: "white",
     fontFamily:
       "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     padding: "34px 20px 56px",
     position: "relative",
     overflow: "hidden",
-  },
-
-  backgroundImage: {
-    position: "absolute",
-    inset: 0,
-    backgroundImage: `url(${sakuraTreeHero})`,
-    backgroundPosition: "left center",
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "cover",
-    opacity: 0.9,
-    transform: "scale(1.01)",
-  },
-
-  backgroundOverlay: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(90deg, rgba(4, 18, 30, 0.18) 0%, rgba(7, 26, 41, 0.54) 42%, rgba(6, 14, 30, 0.9) 100%), linear-gradient(180deg, rgba(8, 47, 58, 0.18) 0%, rgba(9, 31, 44, 0.44) 48%, rgba(4, 11, 24, 0.94) 100%)",
   },
 
   sakuraLeft: {

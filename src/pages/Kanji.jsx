@@ -159,6 +159,8 @@ function Kanji() {
 
   return (
     <div style={styles.page}>
+      <div style={styles.glowOrb1} />
+      <div style={styles.glowOrb2} />
       {/* Floating kanji */}
       {floatingKanji.map((k, i) => (
         <span
@@ -347,13 +349,35 @@ function Kanji() {
 const styles = {
   page: {
     minHeight: "100vh",
-    background:
-      "linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, transparent 28%), linear-gradient(225deg, rgba(245, 158, 11, 0.1) 0%, transparent 30%), linear-gradient(160deg, #061821 0%, #102235 50%, #141827 100%)",
+    backgroundColor: "#020617",
+    backgroundImage: "radial-gradient(ellipse at bottom, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%)",
     boxSizing: "border-box",
     color: "white",
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     overflow: "hidden",
     position: "relative",
+  },
+  glowOrb1: {
+    position: "absolute",
+    top: "-5%",
+    right: "-10%",
+    width: "45vw",
+    height: "45vw",
+    background: "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)",
+    borderRadius: "50%",
+    zIndex: 0,
+    pointerEvents: "none",
+  },
+  glowOrb2: {
+    position: "absolute",
+    bottom: "-15%",
+    left: "-5%",
+    width: "55vw",
+    height: "55vw",
+    background: "radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%)",
+    borderRadius: "50%",
+    zIndex: 0,
+    pointerEvents: "none",
   },
   floatKanji: {
     position: "absolute",
