@@ -42,6 +42,8 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [quickAddText, setQuickAddText] = useState("");
   const [selectedQuickAddCharacters, setSelectedQuickAddCharacters] = useState(new Set());
+  const [quickLookupResults, setQuickLookupResults] = useState([]);
+  const [quickLookupLoading, setQuickLookupLoading] = useState(false);
 
   async function handleAutoFill() {
     const kanjiStr = formData.kanji.trim();
@@ -97,6 +99,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   function handleQuickAddTextChange(event) {
     const value = event.target.value;
     setQuickAddText(value);
+    setQuickLookupResults([]);
 
     const characters = [
       ...new Set(
@@ -113,6 +116,8 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   }
 
   function toggleQuickAddCharacter(char) {
+    setQuickLookupResults([]);
+    
     setSelectedQuickAddCharacters((prev) => {
       const next = new Set(prev);
 
@@ -124,6 +129,46 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
 
       return next;
     });
+  }
+
+  async function handleQuickLookup() {
+    if (selectedQuickAddCharacters.size === 0) return;
+
+    setQuickLookupLoading(true);
+
+    const results = await Promise.all(
+      [...selectedQuickAddCharacters].map(async (char) => {
+        try {
+          const res = await fetch(
+            `https://kanjiapi.dev/v1/kanji/${encodeURIComponent(char)}`
+          );
+
+          if (!res.ok) {
+            throw new Error("Kanji not found");
+          }
+
+          const data = await res.json();
+
+          return {
+            char,
+            success: true,
+            meaning: (data.meanings || []).join(", "),
+            onyomi: (data.on_readings || []).join(", "),
+            kunyomi: (data.kun_readings || []).join(", "),
+            jlpt: data.jlpt ? `N${data.jlpt}` : "",
+          };
+        } catch {
+          return {
+            char,
+            success: false,
+            error: "Lookup failed",
+          };
+        }
+      })
+    );
+
+    setQuickLookupResults(results);
+    setQuickLookupLoading(false);
   }
 
   function handleSubmit(event) {
@@ -188,6 +233,53 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
                     </button>
                   );
                 })}
+
+                {quickAddCharacters.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={selectedQuickAddCharacters.size === 0 || quickLookupLoading}
+                    onClick={handleQuickLookup}
+                    style={
+                      selectedQuickAddCharacters.size === 0 || quickLookupLoading
+                        ? styles.quickLookupDisabled
+                        : styles.quickLookupButton
+                    }
+                  >
+                    {quickLookupLoading ? "Looking up…" : "Look Up Selected"}
+                  </button>
+                )}
+
+                {quickLookupResults.length > 0 && (
+                  <div style={styles.quickLookupResults}>
+                    {quickLookupResults.map((result) => (
+                      <div key={result.char} style={styles.quickLookupRow}>
+                        <div style={styles.quickLookupKanji}>
+                          {result.char}
+                        </div>
+
+                        {result.success ? (
+                          <>
+                            <div style={styles.quickLookupMeaning}>
+                              {result.meaning || "No meaning available"}
+                            </div>
+
+                            <div style={styles.quickLookupReading}>
+                              {result.onyomi || result.kunyomi || "No reading"}
+                            </div>
+
+                            <div style={styles.quickLookupJlpt}>
+                              {result.jlpt || "—"}
+                            </div>
+                          </>
+                        ) : (
+                          <div style={styles.quickLookupError}>
+                            {result.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -448,6 +540,84 @@ const styles = {
     right: "4px",
     top: "4px",
     width: "16px",
+  },
+
+  quickLookupButton: {
+    background: "linear-gradient(135deg, #ec4899, #8b5cf6)",
+    border: "none",
+    borderRadius: "8px",
+    color: "white",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.9rem",
+    fontWeight: 900,
+    marginTop: "14px",
+    padding: "10px 16px",
+    width: "100%",
+  },
+
+  quickLookupDisabled: {
+    background: "rgba(148, 163, 184, 0.08)",
+    border: "1px solid rgba(148, 163, 184, 0.15)",
+    borderRadius: "8px",
+    color: "#64748b",
+    cursor: "not-allowed",
+    fontFamily: "inherit",
+    fontSize: "0.9rem",
+    fontWeight: 900,
+    marginTop: "14px",
+    padding: "10px 16px",
+    width: "100%",
+  },
+
+  quickLookupResults: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+    marginTop: "14px",
+  },
+
+  quickLookupRow: {
+    alignItems: "center",
+    background: "rgba(15, 23, 42, 0.65)",
+    border: "1px solid rgba(148, 163, 184, 0.16)",
+    borderRadius: "8px",
+    display: "grid",
+    gap: "10px",
+    gridTemplateColumns: "42px minmax(120px, 1fr) minmax(100px, 0.8fr) 42px",
+    padding: "8px 10px",
+  },
+
+  quickLookupKanji: {
+    color: "#f9a8d4",
+    fontSize: "1.35rem",
+    fontWeight: 900,
+    textAlign: "center",
+  },
+
+  quickLookupMeaning: {
+    color: "#e2e8f0",
+    fontSize: "0.88rem",
+    fontWeight: 700,
+  },
+
+  quickLookupReading: {
+    color: "#94a3b8",
+    fontSize: "0.82rem",
+  },
+
+  quickLookupJlpt: {
+    color: "#6ee7b7",
+    fontSize: "0.78rem",
+    fontWeight: 900,
+    textAlign: "center",
+  },
+
+  quickLookupError: {
+    color: "#fca5a5",
+    fontSize: "0.82rem",
+    fontWeight: 700,
+    gridColumn: "2 / -1",
   },
 };
 
