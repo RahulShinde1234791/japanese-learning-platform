@@ -41,6 +41,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   const [formData, setFormData] = useState(editingEntry ?? emptyForm);
   const [loading, setLoading] = useState(false);
   const [quickAddText, setQuickAddText] = useState("");
+  const [selectedQuickAddCharacters, setSelectedQuickAddCharacters] = useState(new Set());
 
   async function handleAutoFill() {
     const kanjiStr = formData.kanji.trim();
@@ -87,11 +88,43 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-    const quickAddCharacters = [
+  const quickAddCharacters = [
+    ...new Set(
+      Array.from(quickAddText).filter((char) => kanjiPattern.test(char))
+    ),
+  ];
+
+  function handleQuickAddTextChange(event) {
+    const value = event.target.value;
+    setQuickAddText(value);
+
+    const characters = [
       ...new Set(
-        Array.from(quickAddText).filter((char) => kanjiPattern.test(char))
+        Array.from(value).filter((char) => kanjiPattern.test(char))
       ),
     ];
+
+    setSelectedQuickAddCharacters((prev) => {
+      const next = new Set(
+        [...prev].filter((char) => characters.includes(char))
+      );
+      return next;
+    });
+  }
+
+  function toggleQuickAddCharacter(char) {
+    setSelectedQuickAddCharacters((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(char)) {
+        next.delete(char);
+      } else {
+        next.add(char);
+      }
+
+      return next;
+    });
+  }
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -123,7 +156,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
           <input
             type="text"
             value={quickAddText}
-            onChange={(event) => setQuickAddText(event.target.value)}
+            onChange={handleQuickAddTextChange}
             placeholder="e.g. 日本語"
             style={styles.input}
           />
@@ -135,11 +168,26 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
               </div>
 
               <div style={styles.quickAddCharacters}>
-                {quickAddCharacters.map((char) => (
-                  <div key={char} style={styles.quickAddCharacter}>
-                    {char}
-                  </div>
-                ))}
+                {quickAddCharacters.map((char) => {
+                  const isSelected = selectedQuickAddCharacters.has(char);
+
+                  return (
+                    <button
+                      key={char}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => toggleQuickAddCharacter(char)}
+                      style={
+                        isSelected
+                          ? styles.quickAddCharacterSelected
+                          : styles.quickAddCharacter
+                      }
+                    >
+                      {isSelected && <span style={styles.quickAddCheck}>✓</span>}
+                      <span>{char}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -359,12 +407,47 @@ const styles = {
     border: "1px solid rgba(249, 168, 212, 0.3)",
     borderRadius: "8px",
     color: "#f9a8d4",
+    cursor: "pointer",
     display: "flex",
     fontSize: "1.4rem",
     fontWeight: 900,
     height: "48px",
     justifyContent: "center",
     width: "48px",
+  },
+
+  quickAddCharacterSelected: {
+    alignItems: "center",
+    background: "rgba(236, 72, 153, 0.28)",
+    border: "1px solid rgba(249, 168, 212, 0.65)",
+    borderRadius: "8px",
+    color: "#fbcfe8",
+    cursor: "pointer",
+    display: "flex",
+    fontSize: "1.4rem",
+    fontWeight: 900,
+    height: "48px",
+    justifyContent: "center",
+    position: "relative",
+    width: "48px",
+    fontFamily: "inherit",
+    boxShadow: "0 0 16px rgba(236, 72, 153, 0.18)",
+  },
+
+  quickAddCheck: {
+    alignItems: "center",
+    background: "#f9a8d4",
+    borderRadius: "50%",
+    color: "#4a1942",
+    display: "flex",
+    fontSize: "0.65rem",
+    fontWeight: 900,
+    height: "16px",
+    justifyContent: "center",
+    position: "absolute",
+    right: "4px",
+    top: "4px",
+    width: "16px",
   },
 };
 
