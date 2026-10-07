@@ -238,8 +238,8 @@ function Kanji() {
         </button>
       </div>
 
-      <main style={styles.layout}>
-        <aside style={styles.sidebar}>
+      <main style={styles.layout} className="kanji-workspace">
+        <aside style={styles.sidebar} className="kanji-workspace-column">
 
           {activeForm === "kanji" ? (
             <KanjiForm
@@ -258,7 +258,7 @@ function Kanji() {
           )}
         </aside>
 
-        <section style={styles.content}>
+        <section style={styles.content} className="kanji-workspace-column">
           <div style={styles.searchPanel}>
             <div>
               <p style={styles.kicker}>Collection</p>
@@ -386,9 +386,32 @@ function Kanji() {
           0%, 100% { transform: translateY(0) scale(1); }
           50% { transform: translateY(-36px) scale(1.07); }
         }
+
         @keyframes kanjiDrift {
           0%, 100% { transform: translateY(0) rotate(0deg); }
           50% { transform: translateY(-22px) rotate(4deg); }
+        }
+
+        .kanji-workspace {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        @media (max-width: 800px) {
+          .kanji-workspace {
+            display: block;
+            overflow-y: auto;
+            overflow-x: hidden;
+          }
+
+          .kanji-workspace-column {
+            overflow: visible;
+            height: auto;
+            min-height: auto;
+          }
+
+          .kanji-workspace-column + .kanji-workspace-column {
+            margin-top: 24px;
+          }
         }
       `}</style>
     </div>
@@ -399,12 +422,14 @@ const styles = {
   page: {
     minHeight: "100vh",
     backgroundColor: "#020617",
-    backgroundImage: "radial-gradient(ellipse at bottom, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%)",
+    backgroundImage:
+      "radial-gradient(ellipse at bottom, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%)",
     boxSizing: "border-box",
     color: "white",
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-    overflow: "hidden",
     position: "relative",
+    display: "flex",
+    flexDirection: "column",
   },
   glowOrb1: {
     position: "absolute",
@@ -440,7 +465,11 @@ const styles = {
   pageContent: {
     position: "relative",
     zIndex: 1,
-    padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 24px) 56px",
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "100vh",
+    boxSizing: "border-box",
+    padding: "16px 24px 24px",
   },
   heroKicker: {
     color: "#f9a8d4",
@@ -454,16 +483,21 @@ const styles = {
     color: "#f9a8d4",
     display: "inline-flex",
     fontWeight: 700,
-    marginBottom: "28px",
+    marginBottom: "12px",
     textDecoration: "none",
     fontSize: "0.95rem",
   },
-  header: { margin: "0 auto 36px", maxWidth: "860px", textAlign: "center" },
+  header: {
+    margin: "0 auto 16px",
+    maxWidth: "860px",
+    textAlign: "center",
+    flexShrink: 0,
+  },
   title: {
     color: "white",
-    fontSize: "clamp(2.2rem, 6vw, 5rem)",
-    lineHeight: 1.1,
-    margin: "0 0 10px",
+    fontSize: "clamp(2rem, 5vw, 4rem)",
+    lineHeight: 1.05,
+    margin: "0 0 6px",
     fontFamily: "inherit",
   },
   subtitle: {
@@ -472,23 +506,34 @@ const styles = {
     lineHeight: 1.6,
   },
   layout: {
-    alignItems: "start",
+    alignItems: "stretch",
     display: "grid",
     gap: "24px",
-    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+    minWidth: 0,
     margin: "0 auto",
     maxWidth: "1240px",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "0 20px 20px",
   },
-  sidebar: { position: "sticky", top: "24px" },
+
+  sidebar: {
+    minWidth: 0,
+    paddingRight: "8px",
+  },
+
   pageTabs: {
     display: "flex",
     gap: "8px",
-    margin: "0 auto 24px",
+    margin: "0 auto 12px",
     maxWidth: "1240px",
+    width: "100%",
     background: "rgba(15, 23, 42, 0.78)",
     padding: "6px",
     borderRadius: "12px",
     border: "1px solid rgba(226, 232, 240, 0.16)",
+    flexShrink: 0,
+    boxSizing: "border-box",
   },
 
   pageTab: {
@@ -517,7 +562,12 @@ const styles = {
     fontFamily: "inherit",
     boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
   },
-  content: { minWidth: 0 },
+  
+  content: {
+    minWidth: 0,
+    paddingRight: "8px",
+  },
+
   searchPanel: {
     alignItems: "center",
     background: "rgba(15, 23, 42, 0.7)",
