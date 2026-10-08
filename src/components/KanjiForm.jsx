@@ -26,24 +26,13 @@ function joinUnique(values) {
   return [...new Set(values.filter(Boolean))].join(", ");
 }
 
-function buildKanjiNotes(data) {
-  const facts = [
-    data.jlpt ? `JLPT N${data.jlpt}` : "",
-    data.grade ? `taught in Japanese school grade ${data.grade}` : "",
-    data.stroke_count ? `${data.stroke_count} strokes` : "",
-    data.freq ? `frequency rank ${data.freq}` : "",
-  ].filter(Boolean);
-  const source = "Source: kanjiapi.dev";
-  return facts.length > 0 ? `${facts.join("; ")}. ${source}` : source;
-}
-
-function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
+function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onUseAsVocabulary, quickAddText, onQuickAddTextChange, selectedQuickAddCharacters,
+  onSelectedQuickAddCharactersChange, onAddSelectedKanji,}) {
   const [formData, setFormData] = useState(editingEntry ?? emptyForm);
   const [loading, setLoading] = useState(false);
-  const [quickAddText, setQuickAddText] = useState("");
-  const [selectedQuickAddCharacters, setSelectedQuickAddCharacters] = useState(new Set());
   const [quickLookupResults, setQuickLookupResults] = useState([]);
   const [quickLookupLoading, setQuickLookupLoading] = useState(false);
+  const [selectedQuickLookupCharacters, setSelectedQuickLookupCharacters] = useState(new Set());
 
   async function handleAutoFill() {
     const kanjiStr = formData.kanji.trim();
@@ -68,7 +57,6 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
       const onyomi = joinUnique(kanjiResults.flatMap((data) => data.on_readings || []));
       const kunyomi = joinUnique(kanjiResults.flatMap((data) => data.kun_readings || []));
       const jlpt = getHardestJlptLevel(kanjiResults);
-      const notes = kanjiResults.map((data) => buildKanjiNotes(data)).join(" | ");
 
       setFormData((prev) => ({
         ...prev,
@@ -76,7 +64,6 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
         meaning: meanings,
         onyomi,
         kunyomi,
-        notes: prev.notes || notes,
       }));
     } catch {
       alert("Kanji not found. Make sure the field contains valid kanji characters.");
@@ -96,10 +83,15 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
     ),
   ];
 
+  const selectedQuickAddWord = quickAddCharacters
+    .filter((char) => selectedQuickAddCharacters.has(char))
+    .join("");
+
   function handleQuickAddTextChange(event) {
     const value = event.target.value;
-    setQuickAddText(value);
+    onQuickAddTextChange(value);
     setQuickLookupResults([]);
+    setSelectedQuickLookupCharacters(new Set());
 
     const characters = [
       ...new Set(
@@ -107,7 +99,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
       ),
     ];
 
-    setSelectedQuickAddCharacters((prev) => {
+    onSelectedQuickAddCharactersChange((prev) => {
       const next = new Set(
         [...prev].filter((char) => characters.includes(char))
       );
@@ -118,7 +110,21 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   function toggleQuickAddCharacter(char) {
     setQuickLookupResults([]);
     
-    setSelectedQuickAddCharacters((prev) => {
+    onSelectedQuickAddCharactersChange((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(char)) {
+        next.delete(char);
+      } else {
+        next.add(char);
+      }
+
+      return next;
+    });
+  }
+
+  function toggleQuickLookupCharacter(char) {
+    setSelectedQuickLookupCharacters((prev) => {
       const next = new Set(prev);
 
       if (next.has(char)) {
@@ -134,6 +140,7 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
   async function handleQuickLookup() {
     if (selectedQuickAddCharacters.size === 0) return;
 
+    setSelectedQuickLookupCharacters(new Set());
     setQuickLookupLoading(true);
 
     const results = await Promise.all(
@@ -234,6 +241,22 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
                   );
                 })}
 
+                {selectedQuickAddCharacters.size >= 2 && selectedQuickAddWord && (
+                  <div style={{ marginTop: "12px" }}>
+                    <div style={{ color: "#e2e8f0", fontSize: "0.9rem" }}>
+                      Selected word: <strong>{selectedQuickAddWord}</strong>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onUseAsVocabulary(selectedQuickAddWord)}
+                      style={styles.useAsVocabularyButton}
+                    >
+                      Use as Vocabulary
+                    </button>
+                  </div>
+                )}
+
                 {quickAddCharacters.length > 0 && (
                   <button
                     type="button"
@@ -252,11 +275,23 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
                 {quickLookupResults.length > 0 && (
                   <div style={styles.quickLookupResults}>
                     {quickLookupResults.map((result) => (
-                      <div key={result.char} style={styles.quickLookupRow}>
+                      <button
+                        key={result.char}
+                        type="button"
+                        onClick={() => toggleQuickLookupCharacter(result.char)}
+                        style={
+                          selectedQuickLookupCharacters.has(result.char)
+                            ? styles.quickLookupRowSelected
+                            : styles.quickLookupRow
+                        }
+                      >
                         <div style={styles.quickLookupKanji}>
                           {result.char}
-                        </div>
 
+                          {selectedQuickLookupCharacters.has(result.char) && (
+                            <span style={styles.quickLookupCheck}>✓</span>
+                          )}
+                        </div>
                         {result.success ? (
                           <>
                             <div style={styles.quickLookupMeaning}>
@@ -276,9 +311,25 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit }) {
                             {result.error}
                           </div>
                         )}
-                      </div>
+                      </button>
                     ))}
                   </div>
+                )}
+                {selectedQuickLookupCharacters.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onAddSelectedKanji(
+                        quickLookupResults.filter((result) =>
+                          selectedQuickLookupCharacters.has(result.char),
+                        ),
+                      );
+                      setSelectedQuickLookupCharacters(new Set());
+                    }}
+                    style={styles.addSelectedKanjiButton}
+                  >
+                    Add Selected to Collection
+                  </button>
                 )}
               </div>
             </div>
@@ -556,6 +607,20 @@ const styles = {
     width: "100%",
   },
 
+  addSelectedKanjiButton: {
+    background: "rgba(16, 185, 129, 0.18)",
+    border: "1px solid rgba(110, 231, 183, 0.4)",
+    borderRadius: "8px",
+    color: "#a7f3d0",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.9rem",
+    fontWeight: 900,
+    marginTop: "10px",
+    padding: "10px 16px",
+    width: "100%",
+  },
+
   quickLookupDisabled: {
     background: "rgba(148, 163, 184, 0.08)",
     border: "1px solid rgba(148, 163, 184, 0.15)",
@@ -586,13 +651,49 @@ const styles = {
     gap: "10px",
     gridTemplateColumns: "42px minmax(120px, 1fr) minmax(100px, 0.8fr) 42px",
     padding: "8px 10px",
+    textAlign: "left",
+    justifyItems: "start",
+    cursor: "pointer",
+  },
+
+  quickLookupRowSelected: {
+    alignItems: "center",
+    background: "rgba(236, 72, 153, 0.18)",
+    border: "1px solid rgba(249, 168, 212, 0.55)",
+    borderRadius: "8px",
+    color: "inherit",
+    cursor: "pointer",
+    display: "grid",
+    gap: "10px",
+    gridTemplateColumns: "42px minmax(120px, 1fr) minmax(100px, 0.8fr) 42px",
+    padding: "8px 10px",
+    textAlign: "left",
+    justifyItems: "start",
+    width: "100%",
   },
 
   quickLookupKanji: {
     color: "#f9a8d4",
     fontSize: "1.35rem",
     fontWeight: 900,
+    position: "relative",
     textAlign: "center",
+  },
+
+  quickLookupCheck: {
+    alignItems: "center",
+    background: "#f9a8d4",
+    borderRadius: "50%",
+    color: "#4a1942",
+    display: "flex",
+    fontSize: "0.65rem",
+    fontWeight: 900,
+    height: "16px",
+    justifyContent: "center",
+    position: "absolute",
+    right: "-4px",
+    top: "-4px",
+    width: "16px",
   },
 
   quickLookupMeaning: {
@@ -618,6 +719,19 @@ const styles = {
     fontSize: "0.82rem",
     fontWeight: 700,
     gridColumn: "2 / -1",
+  },
+
+  useAsVocabularyButton: {
+    background: "rgba(139, 92, 246, 0.2)",
+    border: "1px solid rgba(167, 139, 250, 0.45)",
+    borderRadius: "8px",
+    color: "#ddd6fe",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.85rem",
+    fontWeight: 800,
+    marginTop: "10px",
+    padding: "9px 14px",
   },
 };
 

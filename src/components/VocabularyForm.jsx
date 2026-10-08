@@ -4,21 +4,25 @@ const emptyForm = {
   word: "",
   reading: "",
   meaning: "",
+  partOfSpeech: "",
   exampleSentence: "",
   notes: "",
 };
 
 async function fetchJisho(word) {
   const res = await fetch(
-    `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`,
+    `/api/jisho/search/words?keyword=${encodeURIComponent(word)}`,
   );
   if (!res.ok) throw new Error("Jisho request failed");
   const data = await res.json();
   return data.data || [];
 }
 
-function VocabularyForm({ editingEntry, onCancelEdit, onSubmit }) {
-  const [formData, setFormData] = useState(editingEntry ?? emptyForm);
+function VocabularyForm({ editingEntry, onCancelEdit, onSubmit, prefilledWord }) {
+  const [formData, setFormData] = useState(() => ({
+    ...(editingEntry ?? emptyForm),
+    word: editingEntry?.word ?? prefilledWord ?? "",
+  }));
   const [loading, setLoading] = useState(false);
 
   async function handleAutoFill() {
@@ -42,18 +46,13 @@ function VocabularyForm({ editingEntry, onCancelEdit, onSubmit }) {
       const sense = entry.senses?.[0] ?? {};
       const reading = japanese.reading || "";
       const meaning = (sense.english_definitions || []).join(", ");
-
-      // Build a simple example sentence placeholder
-      const exampleSentence =
-        word.endsWith("る")
-          ? `${word}ことが好きです。`
-          : `${word}を使います。`;
+      const partOfSpeech = (sense.parts_of_speech || []).join(", ");
 
       setFormData((prev) => ({
         ...prev,
         reading: reading || prev.reading,
         meaning: meaning || prev.meaning,
-        exampleSentence: prev.exampleSentence || exampleSentence,
+        partOfSpeech: partOfSpeech || prev.partOfSpeech,
       }));
     } catch {
       alert("No data found for this word. Try a different spelling.");
@@ -131,6 +130,18 @@ function VocabularyForm({ editingEntry, onCancelEdit, onSubmit }) {
           value={formData.meaning}
           onChange={handleChange}
           placeholder="e.g. to eat"
+        />
+      </label>
+
+      {/* Part of Speech */}
+      <label style={styles.label}>
+        Part of Speech
+        <input
+          name="partOfSpeech"
+          style={styles.input}
+          value={formData.partOfSpeech}
+          onChange={handleChange}
+          placeholder="e.g. Noun, Ichidan verb"
         />
       </label>
 

@@ -15,6 +15,9 @@ function VocabularyCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite 
           <div style={styles.word}>{entry.word}</div>
           {entry.reading && <div style={styles.reading}>{entry.reading}</div>}
           <div style={styles.meaning}>{entry.meaning}</div>
+          {entry.partOfSpeech && (
+            <div style={styles.partOfSpeech}>{entry.partOfSpeech}</div>
+          )}
         </div>
 
         <div style={styles.actions}>
@@ -62,7 +65,7 @@ const styles = {
   topRow: {
     alignItems: "flex-start",
     display: "flex",
-    gap: "16px",
+    gap: "12px",
     justifyContent: "space-between",
   },
   wordBlock: { minWidth: 0 },
@@ -158,6 +161,12 @@ const styles = {
     fontSize: "0.88rem",
     lineHeight: 1.55,
     marginTop: "12px",
+  },
+  partOfSpeech: {
+    color: "#94a3b8",
+    fontSize: "0.82rem",
+    fontWeight: 700,
+    marginTop: "6px",
   },
 };
 
