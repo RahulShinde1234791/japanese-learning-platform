@@ -337,6 +337,13 @@ function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onUseAsVocabulary, qu
         </div>
       )}
 
+      <div style={styles.manualAddSection}>
+        <div style={styles.manualAddTitle}>Add Individual Kanji</div>
+        <p style={styles.manualAddDescription}>
+          Enter a kanji or kanji word and fill in its details manually or with Auto Fill.
+        </p>
+      </div>
+
       {/* Kanji + Auto Fill */}
       <label style={styles.label}>
         Kanji
@@ -732,6 +739,26 @@ const styles = {
     fontWeight: 800,
     marginTop: "10px",
     padding: "9px 14px",
+  },
+
+  manualAddSection: {
+    borderTop: "1px solid rgba(148, 163, 184, 0.18)",
+    marginTop: "24px",
+    paddingTop: "20px",
+  },
+
+  manualAddTitle: {
+    color: "#e2e8f0",
+    fontSize: "1rem",
+    fontWeight: 900,
+    marginBottom: "4px",
+  },
+
+  manualAddDescription: {
+    color: "#94a3b8",
+    fontSize: "0.82rem",
+    lineHeight: 1.5,
+    margin: 0,
   },
 };
 

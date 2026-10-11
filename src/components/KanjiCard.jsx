@@ -35,11 +35,35 @@ function JlptBadge({ level }) {
 function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
   const [showStrokes, setShowStrokes] = useState(false);
   const [starAnimating, setStarAnimating] = useState(false);
+  const [showAllMeanings, setShowAllMeanings] = useState(false);
 
   function handleToggleFavorite() {
     onToggleFavorite(entry.id);
     setStarAnimating(true);
   }
+
+  const meanings = entry.meaning
+    ? entry.meaning
+        .split(",")
+        .map((meaning) => meaning.trim())
+        .filter(Boolean)
+    : [];
+
+  const visibleMeanings = showAllMeanings
+    ? meanings
+    : meanings.slice(0, 4);
+
+  const hasMoreMeanings = meanings.length > 4;
+
+  const meaningText = visibleMeanings.join(", ");
+
+  const cleanedMeaning = meaningText.startsWith(`${entry.kanji}:`)
+    ? meaningText.slice(`${entry.kanji}:`.length).trim()
+    : meaningText;
+
+  const displayMeaning = cleanedMeaning.replace(/^./u, (char) =>
+    char.toUpperCase(),
+  );
 
   return (
     <article style={styles.card}>
@@ -49,7 +73,21 @@ function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
             <span style={styles.kanji}>{entry.kanji}</span>
             <JlptBadge level={entry.jlpt} />
           </div>
-          <div style={styles.meaning}>{entry.meaning}</div>
+          <div style={styles.meaning}>
+            {displayMeaning}
+
+            {hasMoreMeanings && (
+              <button
+                type="button"
+                style={styles.meaningToggle}
+                onClick={() => setShowAllMeanings((value) => !value)}
+              >
+                {showAllMeanings
+                  ? "Show less ▲"
+                  : `Show ${meanings.length - 4} more ▼`}
+              </button>
+            )}
+          </div>
         </div>
 
         <div style={styles.actions}>
@@ -133,10 +171,10 @@ const styles = {
   },
   meaning: {
     color: "#f9a8d4",
-    fontSize: "1rem",
+    fontSize: "1.08rem",
     fontWeight: 800,
-    marginTop: "10px",
-    lineHeight: 1.4,
+    marginTop: "12px",
+    lineHeight: 1.5,
   },
   actions: {
     display: "flex",
@@ -246,6 +284,17 @@ const styles = {
   },
   strokeWrapper: {
     animation: "fadeSlideIn 0.25s ease",
+  },
+    meaningToggle: {
+    background: "none",
+    border: "none",
+    color: "#c4b5fd",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.78rem",
+    fontWeight: 800,
+    marginLeft: "6px",
+    padding: 0,
   },
 };
 

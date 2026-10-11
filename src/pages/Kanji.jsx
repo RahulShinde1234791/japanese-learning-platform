@@ -73,6 +73,9 @@ function Kanji() {
   const [prefilledVocabWord, setPrefilledVocabWord] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const ITEMS_PER_PAGE = 12;
 
   const [kanjiFavorites, setKanjiFavorites] = useState(() =>
     loadKanjiFavorites(),
@@ -83,6 +86,10 @@ function Kanji() {
   );
 
   const [activeFilter, setActiveFilter] = useState("all");
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeFilter]);
 
   useEffect(() => {
     saveKanji(kanjiEntries);
@@ -140,6 +147,17 @@ function Kanji() {
     kanjiFavorites,
     activeFilter,
   ]);
+
+  const totalPages = Math.ceil(
+    filteredKanjiEntries.length / ITEMS_PER_PAGE
+  );
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  const paginatedKanjiEntries = filteredKanjiEntries.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   /*
    * -----------------------------
@@ -588,24 +606,69 @@ function Kanji() {
               </div>
 
               {filteredKanjiEntries.length > 0 ? (
-                <div style={styles.cardGrid}>
-                  {filteredKanjiEntries.map((entry) => (
-                    <KanjiCard
-                      key={`k-${entry.id}`}
-                      entry={entry}
-                      isFavorite={kanjiFavorites.has(entry.id)}
-                      onDelete={(id) =>
-                        handleDelete(id, "kanji")
-                      }
-                      onEdit={(item) =>
-                        startEditing(item, "kanji")
-                      }
-                      onToggleFavorite={(id) =>
-                        handleToggleFavorite(id, "kanji")
-                      }
-                    />
-                  ))}
-                </div>
+                <>
+                  <div style={styles.cardGrid}>
+                    {paginatedKanjiEntries.map((entry) => (
+                      <KanjiCard
+                        key={`k-${entry.id}`}
+                        entry={entry}
+                        isFavorite={kanjiFavorites.has(entry.id)}
+                        onDelete={(id) =>
+                          handleDelete(id, "kanji")
+                        }
+                        onEdit={(item) =>
+                          startEditing(item, "kanji")
+                        }
+                        onToggleFavorite={(id) =>
+                          handleToggleFavorite(id, "kanji")
+                        }
+                      />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div style={styles.pagination}>
+                      <button
+                        type="button"
+                        style={styles.paginationButton}
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((page) => page - 1)}
+                      >
+                        ← Previous
+                      </button>
+
+                      <div style={styles.pageNumbers}>
+                        {Array.from({ length: totalPages }, (_, index) => {
+                          const page = index + 1;
+
+                          return (
+                            <button
+                              key={page}
+                              type="button"
+                              style={
+                                currentPage === page
+                                  ? styles.paginationActive
+                                  : styles.paginationButton
+                              }
+                              onClick={() => setCurrentPage(page)}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        style={styles.paginationButton}
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((page) => page + 1)}
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <EmptyState
                   isFavorites={activeFilter === "favorites"}
@@ -784,12 +847,12 @@ const styles = {
 
   glowOrb2: {
     position: "absolute",
-    bottom: "-15%",
-    left: "-5%",
+    bottom: "0",
+    left: "-10%",
     width: "55vw",
     height: "55vw",
     background:
-      "radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%)",
+      "radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, transparent 70%)",
     borderRadius: "50%",
     zIndex: 0,
     pointerEvents: "none",
@@ -1023,6 +1086,7 @@ const styles = {
 
   cardGrid: {
     display: "grid",
+    alignItems: "start",
     gap: "16px",
     gridTemplateColumns:
       "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
@@ -1051,6 +1115,45 @@ const styles = {
   emptyCopy: {
     color: "#94a3b8",
     fontSize: "0.95rem",
+  },
+
+  pagination: {
+    alignItems: "center",
+    display: "flex",
+    gap: "10px",
+    justifyContent: "center",
+    marginTop: "24px",
+    marginBottom: "8px",
+    flexWrap: "wrap",
+  },
+
+  pageNumbers: {
+    display: "flex",
+    gap: "6px",
+  },
+
+  paginationButton: {
+    background: "rgba(30, 41, 59, 0.7)",
+    border: "1px solid rgba(148, 163, 184, 0.2)",
+    borderRadius: "8px",
+    color: "#cbd5e1",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.85rem",
+    fontWeight: 700,
+    padding: "8px 12px",
+  },
+
+  paginationActive: {
+    background: "rgba(236, 72, 153, 0.18)",
+    border: "1px solid rgba(236, 72, 153, 0.4)",
+    borderRadius: "8px",
+    color: "#f9a8d4",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "0.85rem",
+    fontWeight: 800,
+    padding: "8px 12px",
   },
 };
 

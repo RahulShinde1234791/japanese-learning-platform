@@ -36,8 +36,14 @@ function StrokeOrder({ kanji }) {
       })
       .then((text) => {
         // Strip XML declaration and extract inner SVG content
+        const svgStart = text.indexOf("<svg");
+
+        if (svgStart === -1) {
+          throw new Error("Invalid SVG data");
+        }
+
         const cleaned = text
-          .replace(/<\?xml[^?]*\?>/g, "")
+          .slice(svgStart)
           .replace(/<!--[\s\S]*?-->/g, "")
           .trim();
         setSvgState({
