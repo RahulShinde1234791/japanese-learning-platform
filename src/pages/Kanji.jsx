@@ -496,6 +496,10 @@ function Kanji() {
             Build your personal kanji and vocabulary notebook with meanings,
             readings, and study notes.
           </p>
+
+          <Link to="/flashcards" style={styles.flashcardsLink}>
+            Study with Flashcards →
+          </Link>
         </header>
 
         {/* Main tabs */}
@@ -916,7 +920,19 @@ const styles = {
     fontSize: "clamp(0.95rem, 2.5vw, 1.1rem)",
     lineHeight: 1.6,
   },
-
+  flashcardsLink: {
+    display: "inline-block",
+    marginTop: "12px",
+    padding: "11px 20px",
+    borderRadius: "10px",
+    background: "rgba(236, 72, 153, 0.16)",
+    border: "1px solid rgba(236, 72, 153, 0.4)",
+    color: "#f9a8d4",
+    fontWeight: 800,
+    fontSize: "0.95rem",
+    textDecoration: "none",
+    transition: "background 0.2s ease",
+  },
   /*
    * Important:
    * There is deliberately NO overflow setting here.
