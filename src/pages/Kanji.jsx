@@ -35,6 +35,16 @@ const floatingKanji = [
   "月",
 ];
 
+
+const sakuraPetals = [
+  { left: "8%", delay: "0s", duration: "18s", size: "12px" },
+  { left: "22%", delay: "-7s", duration: "22s", size: "9px" },
+  { left: "43%", delay: "-12s", duration: "20s", size: "14px" },
+  { left: "64%", delay: "-4s", duration: "24s", size: "10px" },
+  { left: "82%", delay: "-15s", duration: "19s", size: "13px" },
+  { left: "94%", delay: "-9s", duration: "23s", size: "8px" },
+];
+
 const kanjiPattern = /\p{Script=Han}/u;
 
 function hasKanjiMeaningFallback(entry) {
@@ -466,6 +476,21 @@ function Kanji() {
       <div style={styles.glowOrb1} />
       <div style={styles.glowOrb2} />
 
+      {sakuraPetals.map((petal, i) => (
+        <span
+          key={`petal-${i}`}
+          aria-hidden="true"
+          style={{
+            ...styles.sakuraPetal,
+            left: petal.left,
+            width: petal.size,
+            height: `calc(${petal.size} * 0.65)`,
+            animationDelay: petal.delay,
+            animationDuration: petal.duration,
+          }}
+        />
+      ))}
+
       {floatingKanji.map((k, i) => (
         <span
           key={k}
@@ -770,6 +795,31 @@ function Kanji() {
       </div>
 
       <style>{`
+        @keyframes sakuraFall {
+          0% {
+            transform: translate3d(0, -20px, 0) rotate(0deg);
+            opacity: 0;
+          }
+
+          10% {
+            opacity: 0.65;
+          }
+
+          50% {
+            transform: translate3d(35px, 50vh, 0) rotate(180deg);
+            opacity: 0.45;
+          }
+
+          90% {
+            opacity: 0.35;
+          }
+
+          100% {
+            transform: translate3d(-20px, 105vh, 0) rotate(360deg);
+            opacity: 0;
+          }
+        }
+
         @keyframes orbFloat {
           0%, 100% {
             transform: translateY(0) scale(1);
@@ -826,8 +876,24 @@ const styles = {
   page: {
     minHeight: "100vh",
     backgroundColor: "#020617",
-    backgroundImage:
-      "radial-gradient(ellipse at bottom, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%)",
+    backgroundImage: `
+      radial-gradient(
+        ellipse at 50% 0%,
+        rgba(88, 28, 70, 0.30) 0%,
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse at 100% 45%,
+        rgba(30, 41, 85, 0.22) 0%,
+        transparent 50%
+      ),
+      linear-gradient(
+        180deg,
+        #090817 0%,
+        #070b1a 48%,
+        #020617 100%
+      )
+    `,
     boxSizing: "border-box",
     color: "white",
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
@@ -838,12 +904,12 @@ const styles = {
 
   glowOrb1: {
     position: "absolute",
-    top: "-5%",
+    top: "-8%",
     right: "-10%",
-    width: "45vw",
-    height: "45vw",
+    width: "48vw",
+    height: "48vw",
     background:
-      "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)",
+      "radial-gradient(circle, rgba(236, 72, 153, 0.16) 0%, rgba(190, 24, 93, 0.05) 38%, transparent 70%)",
     borderRadius: "50%",
     zIndex: 0,
     pointerEvents: "none",
@@ -852,14 +918,27 @@ const styles = {
   glowOrb2: {
     position: "absolute",
     bottom: "0",
-    left: "-10%",
+    left: "-12%",
     width: "55vw",
     height: "55vw",
     background:
-      "radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, transparent 70%)",
+      "radial-gradient(circle, rgba(147, 51, 234, 0.10) 0%, rgba(236, 72, 153, 0.05) 42%, transparent 70%)",
     borderRadius: "50%",
     zIndex: 0,
     pointerEvents: "none",
+  },
+  sakuraPetal: {
+    position: "absolute",
+    top: "-20px",
+    background:
+      "linear-gradient(135deg, rgba(255, 183, 213, 0.8), rgba(236, 72, 153, 0.35))",
+    borderRadius: "100% 0 100% 0",
+    boxShadow: "0 0 8px rgba(236, 72, 153, 0.12)",
+    pointerEvents: "none",
+    zIndex: 0,
+    animationName: "sakuraFall",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
   },
 
   floatKanji: {
