@@ -99,7 +99,7 @@ function KanjiCard({ entry, isFavorite, onDelete, onEdit, onToggleFavorite }) {
             onAnimationEnd={() => setStarAnimating(false)}
             onClick={handleToggleFavorite}
           >
-            {isFavorite ? "⭐" : "☆"}
+            {isFavorite ? "★" : "☆"}
           </button>
           <button type="button" style={styles.editBtn} onClick={() => onEdit(entry)}>
             Edit

@@ -1,0 +1,1385 @@
+{
+  "checkpoint_evaluated": "best_kanji_cnn.pth",
+  "checkpoint_epoch": 10,
+  "num_test_samples": 3402,
+  "num_classes": 162,
+  "test_loss": 0.0494,
+  "test_top1_accuracy_pct": 98.74,
+  "test_top5_accuracy_pct": 99.88,
+  "perfect_accuracy_classes": 126,
+  "top_confused_pairs": [
+    {
+      "true_char": "八",
+      "predicted_char": "入",
+      "count": 3
+    },
+    {
+      "true_char": "お",
+      "predicted_char": "母",
+      "count": 1
+    },
+    {
+      "true_char": "き",
+      "predicted_char": "ま",
+      "count": 1
+    },
+    {
+      "true_char": "ぎ",
+      "predicted_char": "き",
+      "count": 1
+    },
+    {
+      "true_char": "さ",
+      "predicted_char": "き",
+      "count": 1
+    },
+    {
+      "true_char": "せ",
+      "predicted_char": "北",
+      "count": 1
+    },
+    {
+      "true_char": "ぞ",
+      "predicted_char": "出",
+      "count": 1
+    },
+    {
+      "true_char": "ぞ",
+      "predicted_char": "そ",
+      "count": 1
+    },
+    {
+      "true_char": "ど",
+      "predicted_char": "と",
+      "count": 1
+    },
+    {
+      "true_char": "な",
+      "predicted_char": "す",
+      "count": 1
+    },
+    {
+      "true_char": "な",
+      "predicted_char": "休",
+      "count": 1
+    },
+    {
+      "true_char": "に",
+      "predicted_char": "小",
+      "count": 1
+    },
+    {
+      "true_char": "ね",
+      "predicted_char": "ぬ",
+      "count": 1
+    },
+    {
+      "true_char": "は",
+      "predicted_char": "日",
+      "count": 1
+    },
+    {
+      "true_char": "ぱ",
+      "predicted_char": "ば",
+      "count": 1
+    }
+  ],
+  "per_class_results": [
+    {
+      "class_index": 0,
+      "character": "あ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 1,
+      "character": "い",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 2,
+      "character": "う",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 3,
+      "character": "え",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 4,
+      "character": "お",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 5,
+      "character": "か",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 6,
+      "character": "が",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 7,
+      "character": "き",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 8,
+      "character": "ぎ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 9,
+      "character": "く",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 10,
+      "character": "ぐ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 11,
+      "character": "け",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 12,
+      "character": "げ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 13,
+      "character": "こ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 14,
+      "character": "ご",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 15,
+      "character": "さ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 16,
+      "character": "ざ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 17,
+      "character": "し",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 18,
+      "character": "じ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 19,
+      "character": "す",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 20,
+      "character": "ず",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 21,
+      "character": "せ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 22,
+      "character": "ぜ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 23,
+      "character": "そ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 24,
+      "character": "ぞ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 19,
+      "accuracy_pct": 90.48
+    },
+    {
+      "class_index": 25,
+      "character": "た",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 26,
+      "character": "だ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 27,
+      "character": "ち",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 28,
+      "character": "ぢ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 29,
+      "character": "つ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 30,
+      "character": "づ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 31,
+      "character": "て",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 32,
+      "character": "で",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 33,
+      "character": "と",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 34,
+      "character": "ど",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 35,
+      "character": "な",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 19,
+      "accuracy_pct": 90.48
+    },
+    {
+      "class_index": 36,
+      "character": "に",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 37,
+      "character": "ぬ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 38,
+      "character": "ね",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 39,
+      "character": "の",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 40,
+      "character": "は",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 41,
+      "character": "ば",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 42,
+      "character": "ぱ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 19,
+      "accuracy_pct": 90.48
+    },
+    {
+      "class_index": 43,
+      "character": "ひ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 44,
+      "character": "び",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 45,
+      "character": "ぴ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 46,
+      "character": "ふ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 47,
+      "character": "ぶ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 48,
+      "character": "ぷ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 49,
+      "character": "へ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 50,
+      "character": "べ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 51,
+      "character": "ぺ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 52,
+      "character": "ほ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 53,
+      "character": "ぼ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 54,
+      "character": "ぽ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 55,
+      "character": "ま",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 56,
+      "character": "み",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 57,
+      "character": "む",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 58,
+      "character": "め",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 59,
+      "character": "も",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 60,
+      "character": "や",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 19,
+      "accuracy_pct": 90.48
+    },
+    {
+      "class_index": 61,
+      "character": "ゆ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 62,
+      "character": "よ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 63,
+      "character": "ら",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 64,
+      "character": "り",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 65,
+      "character": "る",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 66,
+      "character": "れ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 67,
+      "character": "ろ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 68,
+      "character": "わ",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 69,
+      "character": "を",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 70,
+      "character": "ん",
+      "category": "Hiragana",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 71,
+      "character": "一",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 72,
+      "character": "七",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 73,
+      "character": "万",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 19,
+      "accuracy_pct": 90.48
+    },
+    {
+      "class_index": 74,
+      "character": "三",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 75,
+      "character": "上",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 76,
+      "character": "下",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 77,
+      "character": "中",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 78,
+      "character": "九",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 79,
+      "character": "二",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 80,
+      "character": "五",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 81,
+      "character": "人",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 82,
+      "character": "今",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 83,
+      "character": "休",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 84,
+      "character": "何",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 85,
+      "character": "先",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 86,
+      "character": "入",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 87,
+      "character": "八",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 18,
+      "accuracy_pct": 85.71
+    },
+    {
+      "class_index": 88,
+      "character": "六",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 89,
+      "character": "出",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 90,
+      "character": "分",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 91,
+      "character": "前",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 92,
+      "character": "北",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 93,
+      "character": "十",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 94,
+      "character": "千",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 95,
+      "character": "午",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 96,
+      "character": "半",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 97,
+      "character": "南",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 98,
+      "character": "友",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 99,
+      "character": "口",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 100,
+      "character": "右",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 101,
+      "character": "名",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 102,
+      "character": "四",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 103,
+      "character": "土",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 104,
+      "character": "外",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 105,
+      "character": "多",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 106,
+      "character": "大",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 107,
+      "character": "天",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 108,
+      "character": "女",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 109,
+      "character": "子",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 110,
+      "character": "学",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 111,
+      "character": "小",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 112,
+      "character": "少",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 113,
+      "character": "山",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 114,
+      "character": "川",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 115,
+      "character": "左",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 116,
+      "character": "年",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 117,
+      "character": "店",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 118,
+      "character": "後",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 119,
+      "character": "手",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 120,
+      "character": "日",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 121,
+      "character": "書",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 122,
+      "character": "月",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 123,
+      "character": "木",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 124,
+      "character": "本",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 125,
+      "character": "来",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 126,
+      "character": "東",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 127,
+      "character": "校",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 128,
+      "character": "母",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 129,
+      "character": "毎",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 130,
+      "character": "気",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 131,
+      "character": "水",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 132,
+      "character": "火",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 133,
+      "character": "父",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 134,
+      "character": "生",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 135,
+      "character": "男",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 136,
+      "character": "白",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 137,
+      "character": "百",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 138,
+      "character": "目",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 139,
+      "character": "立",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 140,
+      "character": "耳",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 141,
+      "character": "聞",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 142,
+      "character": "花",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 143,
+      "character": "行",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 144,
+      "character": "西",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 145,
+      "character": "話",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 146,
+      "character": "語",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 147,
+      "character": "読",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 148,
+      "character": "買",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 149,
+      "character": "足",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 150,
+      "character": "車",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 151,
+      "character": "週",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 152,
+      "character": "道",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 153,
+      "character": "金",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 154,
+      "character": "長",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 155,
+      "character": "間",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 156,
+      "character": "雨",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 157,
+      "character": "電",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 158,
+      "character": "食",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 159,
+      "character": "飲",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    },
+    {
+      "class_index": 160,
+      "character": "駅",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 20,
+      "accuracy_pct": 95.24
+    },
+    {
+      "class_index": 161,
+      "character": "魚",
+      "category": "N5 Kanji",
+      "total_samples": 21,
+      "correct_samples": 21,
+      "accuracy_pct": 100.0
+    }
+  ]
+}

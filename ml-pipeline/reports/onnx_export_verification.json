@@ -1,0 +1,27 @@
+{
+  "onnx_model_path": "models\\kanji_cnn.onnx",
+  "file_size_bytes": 1082989,
+  "file_size_mb": 1.03,
+  "input_name": "input",
+  "input_shape": [
+    "batch_size",
+    "1",
+    "64",
+    "64"
+  ],
+  "output_name": "logits",
+  "output_shape": [
+    "batch_size",
+    "162"
+  ],
+  "opset_version": 14,
+  "test_batch_size": 32,
+  "max_absolute_error": 2.288818359375e-05,
+  "mean_absolute_error": 2.930444907178753e-06,
+  "all_predictions_matched": true,
+  "single_sample_inference": {
+    "true_character": "あ",
+    "predicted_character": "あ",
+    "match": true
+  }
+}

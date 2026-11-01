@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import KanjiCard from "../components/KanjiCard";
 import KanjiForm from "../components/KanjiForm";
 import VocabularyCard from "../components/VocabularyCard";
 import VocabularyForm from "../components/VocabularyForm";
+import HandwritingPanel from "../components/HandwritingPanel";
 
 import kanjiDefaults from "../data/kanjiDefaults";
 import vocabularyDefaults from "../data/vocabularyDefaults";
@@ -81,11 +82,28 @@ function Kanji() {
     new Set(),
   );
   const [prefilledVocabWord, setPrefilledVocabWord] = useState("");
+  const [prefilledKanjiChar, setPrefilledKanjiChar] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [isHandwritingOpen, setIsHandwritingOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 48;
+
+  // Close drawer or handwriting pad on Escape key
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape") {
+        setIsEditorOpen(false);
+        setEditingEntry(null);
+        setPrefilledKanjiChar("");
+        setIsHandwritingOpen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const [kanjiFavorites, setKanjiFavorites] = useState(() =>
     loadKanjiFavorites(),
@@ -97,9 +115,15 @@ function Kanji() {
 
   const [activeFilter, setActiveFilter] = useState("all");
 
-  useEffect(() => {
+  function handleSearchChange(value) {
     setCurrentPage(1);
-  }, [searchTerm, activeFilter]);
+    setSearchTerm(value);
+  }
+
+  function handleFilterChange(filter) {
+    setCurrentPage(1);
+    setActiveFilter(filter);
+  }
 
   useEffect(() => {
     saveKanji(kanjiEntries);
@@ -218,6 +242,7 @@ function Kanji() {
     setActiveForm("vocab");
     setEditingEntry(null);
     setActiveFilter("all");
+    setIsEditorOpen(true);
   }
   
   function handleKanjiSubmit(formData) {
@@ -246,6 +271,7 @@ function Kanji() {
       );
 
       setEditingEntry(null);
+      setIsEditorOpen(false);
       return;
     }
 
@@ -266,6 +292,12 @@ function Kanji() {
       },
       ...prev,
     ]);
+
+    setSearchTerm("");
+    setActiveFilter("all");
+    setCurrentPage(1);
+    setIsEditorOpen(false);
+    setPrefilledKanjiChar("");
   }
 
   function handleAddSelectedKanji(results) {
@@ -304,6 +336,11 @@ function Kanji() {
 
       return [...newEntries, ...prev];
     });
+
+    setSearchTerm("");
+    setActiveFilter("all");
+    setCurrentPage(1);
+    setIsEditorOpen(false);
 
     const messages = [];
 
@@ -352,6 +389,7 @@ function Kanji() {
       );
 
       setEditingEntry(null);
+      setIsEditorOpen(false);
       return;
     }
 
@@ -372,6 +410,12 @@ function Kanji() {
       },
       ...prev,
     ]);
+
+    setSearchTerm("");
+    setActiveFilter("all");
+    setCurrentPage(1);
+    setIsEditorOpen(false);
+    setPrefilledVocabWord("");
   }
 
   /*
@@ -454,6 +498,28 @@ function Kanji() {
       ...entry,
       type,
     });
+    setIsEditorOpen(true);
+  }
+
+  function handleHandwritingSearch(char) {
+    setSearchTerm(char);
+    setCurrentPage(1);
+  }
+
+  function handleHandwritingAddKanji(char) {
+    setActiveForm("kanji");
+    setPrefilledKanjiChar(char);
+    setQuickAddText(char);
+    setSelectedQuickAddCharacters(new Set([char]));
+    setEditingEntry(null);
+    setIsEditorOpen(true);
+  }
+
+  function handleHandwritingAddVocab(char) {
+    setActiveForm("vocab");
+    setPrefilledVocabWord(char);
+    setEditingEntry(null);
+    setIsEditorOpen(true);
   }
 
   /*
@@ -508,290 +574,327 @@ function Kanji() {
       ))}
 
       <div style={styles.pageContent}>
-        <Link to="/" style={styles.backLink}>
-          ← Home
-        </Link>
-
-        <header style={styles.header}>
-          <p style={styles.heroKicker}>漢字ノートと語彙</p>
-
-          <h1 style={styles.title}>Kanji &amp; Vocab</h1>
-
-          <p style={styles.subtitle}>
-            Build your personal kanji and vocabulary notebook with meanings,
-            readings, and study notes.
-          </p>
-
-          <Link to="/flashcards" style={styles.flashcardsLink}>
-            Study with Flashcards →
+        {/* Top Navigation Row */}
+        <div style={styles.topNavRow}>
+          <Link to="/" style={styles.backHomeBtn}>
+            ← Return to Home
           </Link>
-        </header>
-
-        {/* Main tabs */}
-        <div style={styles.pageTabs}>
-          <button
-            type="button"
-            style={
-              isKanjiTab
-                ? styles.pageTabActive
-                : styles.pageTab
-            }
-            onClick={() => switchTab("kanji")}
-          >
-            Kanji
-          </button>
-
-          <button
-            type="button"
-            style={
-              !isKanjiTab
-                ? styles.pageTabActive
-                : styles.pageTab
-            }
-            onClick={() => switchTab("vocab")}
-          >
-            Vocabulary
-          </button>
+          <div style={styles.headerStatsPill}>
+            {kanjiEntries.length} Kanji · {vocabEntries.length} Words · {kanjiFavorites.size + vocabFavorites.size} Favorites
+          </div>
         </div>
 
-        {/* =====================================================
-            KANJI TAB
-           ===================================================== */}
+        {/* Header */}
+        <header style={styles.header}>
+          <p style={styles.heroKicker}>漢字ノートと語彙</p>
+          <h1 style={styles.title}>Kanji &amp; Vocabulary Hub</h1>
+          <p style={styles.subtitle}>
+            Manage your personal kanji and vocabulary collection with dictionary definitions, stroke orders, and handwriting search.
+          </p>
+        </header>
 
-        {isKanjiTab ? (
-          <main style={styles.layout}>
-            <aside style={styles.sidebar}>
-              <KanjiForm
-                key={editingEntry?.id ?? "new-kanji"}
-                editingEntry={editingEntry?.type === "kanji" ? editingEntry: null}
-                onCancelEdit={() => setEditingEntry(null)}
-                onSubmit={handleKanjiSubmit}
-                onUseAsVocabulary={handleUseAsVocabulary}
-                quickAddText={quickAddText}
-                onQuickAddTextChange={setQuickAddText}
-                selectedQuickAddCharacters={selectedQuickAddCharacters}
-                onSelectedQuickAddCharactersChange={setSelectedQuickAddCharacters}
-                onAddSelectedKanji={handleAddSelectedKanji}
-              />
-            </aside>
-
-            <section style={styles.content}>
-              <div style={styles.searchPanel}>
+        {/* Studio Drawer (Slide-Over for Adding & Editing) */}
+        {isEditorOpen && (
+          <div
+            style={styles.drawerBackdrop}
+            onClick={() => {
+              setIsEditorOpen(false);
+              setEditingEntry(null);
+              setPrefilledKanjiChar("");
+            }}
+          >
+            <div
+              style={styles.drawer}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.drawerHeader}>
                 <div>
-                  <p style={styles.kicker}>Collection</p>
-
-                  <h2 style={styles.sectionTitle}>
-                    {kanjiEntries.length} saved kanji
+                  <span style={styles.drawerKicker}>
+                    {isKanjiTab ? "漢字スタジオ" : "語彙スタジオ"}
+                  </span>
+                  <h2 style={styles.drawerTitle}>
+                    {editingEntry
+                      ? `Edit ${editingEntry.type === "kanji" ? "Kanji" : "Vocabulary"}`
+                      : `Add to ${isKanjiTab ? "Kanji" : "Vocabulary"}`}
                   </h2>
                 </div>
-
-                <input
-                  placeholder="Search kanji, readings, meanings…"
-                  style={styles.searchInput}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditorOpen(false);
+                    setEditingEntry(null);
+                    setPrefilledKanjiChar("");
+                  }}
+                  style={styles.drawerCloseBtn}
+                  aria-label="Close drawer"
+                >
+                  ✕
+                </button>
               </div>
 
-              <div style={styles.filterBar}>
-                <button
-                  type="button"
-                  style={
-                    activeFilter === "all"
-                      ? styles.filterActive
-                      : styles.filter
-                  }
-                  onClick={() => setActiveFilter("all")}
-                >
-                  All ({kanjiEntries.length})
-                </button>
-
-                <button
-                  type="button"
-                  style={
-                    activeFilter === "favorites"
-                      ? styles.filterFavActive
-                      : styles.filter
-                  }
-                  onClick={() => setActiveFilter("favorites")}
-                >
-                  ⭐ Favorites ({kanjiFavorites.size})
-                </button>
-
-                {["N5", "N4", "N3", "N2", "N1"].map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    style={
-                      activeFilter === level
-                        ? styles.filterJlptActive
-                        : styles.filter
+              <div style={styles.drawerBody}>
+                {isKanjiTab ? (
+                  <KanjiForm
+                    key={editingEntry?.id ?? "new-kanji"}
+                    editingEntry={
+                      editingEntry?.type === "kanji" ? editingEntry : null
                     }
-                    onClick={() => setActiveFilter(level)}
-                  >
-                    {level}
-                  </button>
-                ))}
+                    onCancelEdit={() => {
+                      setEditingEntry(null);
+                      setIsEditorOpen(false);
+                      setPrefilledKanjiChar("");
+                    }}
+                    onSubmit={handleKanjiSubmit}
+                    onUseAsVocabulary={handleUseAsVocabulary}
+                    quickAddText={quickAddText}
+                    onQuickAddTextChange={setQuickAddText}
+                    selectedQuickAddCharacters={selectedQuickAddCharacters}
+                    onSelectedQuickAddCharactersChange={
+                      setSelectedQuickAddCharacters
+                    }
+                    onAddSelectedKanji={handleAddSelectedKanji}
+                    prefilledKanji={prefilledKanjiChar}
+                  />
+                ) : (
+                  <VocabularyForm
+                    key={editingEntry?.id ?? "new-vocab"}
+                    editingEntry={
+                      editingEntry?.type === "vocab" ? editingEntry : null
+                    }
+                    onCancelEdit={() => {
+                      setEditingEntry(null);
+                      setIsEditorOpen(false);
+                      setPrefilledVocabWord("");
+                    }}
+                    onSubmit={handleVocabSubmit}
+                    prefilledWord={prefilledVocabWord}
+                  />
+                )}
               </div>
+            </div>
+          </div>
+        )}
 
-              {filteredKanjiEntries.length > 0 ? (
-                <>
-                  <div style={styles.cardGrid}>
-                    {paginatedKanjiEntries.map((entry) => (
-                      <KanjiCard
-                        key={`k-${entry.id}`}
-                        entry={entry}
-                        isFavorite={kanjiFavorites.has(entry.id)}
-                        onDelete={(id) =>
-                          handleDelete(id, "kanji")
-                        }
-                        onEdit={(item) =>
-                          startEditing(item, "kanji")
-                        }
-                        onToggleFavorite={(id) =>
-                          handleToggleFavorite(id, "kanji")
-                        }
-                      />
-                    ))}
-                  </div>
+        {/* Action Toolbar */}
+        <div style={styles.toolbar}>
+          {/* Tabs */}
+          <div style={styles.pageTabs}>
+            <button
+              type="button"
+              style={isKanjiTab ? styles.pageTabActive : styles.pageTab}
+              onClick={() => switchTab("kanji")}
+            >
+              Kanji ({kanjiEntries.length})
+            </button>
 
-                  {totalPages > 1 && (
-                    <div style={styles.pagination}>
-                      <button
-                        type="button"
-                        style={styles.paginationButton}
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage((page) => page - 1)}
-                      >
-                        ← Previous
-                      </button>
+            <button
+              type="button"
+              style={!isKanjiTab ? styles.pageTabActive : styles.pageTab}
+              onClick={() => switchTab("vocab")}
+            >
+              Vocabulary ({vocabEntries.length})
+            </button>
+          </div>
 
-                      <div style={styles.pageNumbers}>
-                        {Array.from({ length: totalPages }, (_, index) => {
-                          const page = index + 1;
+          {/* Quick Actions */}
+          <div style={styles.toolbarActions}>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingEntry(null);
+                setPrefilledKanjiChar("");
+                setIsEditorOpen(true);
+              }}
+              style={styles.primaryAddBtn}
+            >
+              {isKanjiTab ? "+ Add Kanji" : "+ Add Word"}
+            </button>
 
-                          return (
-                            <button
-                              key={page}
-                              type="button"
-                              style={
-                                currentPage === page
-                                  ? styles.paginationActive
-                                  : styles.paginationButton
-                              }
-                              onClick={() => setCurrentPage(page)}
-                            >
-                              {page}
-                            </button>
-                          );
-                        })}
-                      </div>
+            <button
+              type="button"
+              onClick={() => setIsHandwritingOpen((open) => !open)}
+              style={isHandwritingOpen ? styles.toolBtnActive : styles.toolBtn}
+            >
+              {isHandwritingOpen ? "Close Handwriting" : "Handwriting Pad"}
+            </button>
 
-                      <button
-                        type="button"
-                        style={styles.paginationButton}
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage((page) => page + 1)}
-                      >
-                        Next →
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <EmptyState
-                  isFavorites={activeFilter === "favorites"}
-                />
-              )}
-            </section>
-          </main>
-        ) : (
-          /* ===================================================
-             VOCABULARY TAB
-             =================================================== */
+            <Link to="/flashcards" style={styles.flashcardsLink}>
+              Flashcards →
+            </Link>
+          </div>
+        </div>
 
-          <main style={styles.layout}>
-            <aside style={styles.sidebar}>
-              <VocabularyForm
-                key={editingEntry?.id ?? "new-vocab"}
-                editingEntry={editingEntry?.type === "vocab" ? editingEntry : null}
-                onCancelEdit={() => setEditingEntry(null)}
-                onSubmit={handleVocabSubmit}
-                prefilledWord={prefilledVocabWord}
+        {/* Handwriting Panel if open */}
+        {isHandwritingOpen && (
+          <HandwritingPanel
+            onSearch={handleHandwritingSearch}
+            onAddKanji={handleHandwritingAddKanji}
+            onAddVocab={handleHandwritingAddVocab}
+            onClose={() => setIsHandwritingOpen(false)}
+          />
+        )}
+
+        {/* Main Collection Area */}
+        <main style={styles.layout}>
+          {/* Search Panel */}
+          <div style={styles.searchPanel}>
+            <div style={styles.searchBarLeft}>
+              <p style={styles.kicker}>
+                {isKanjiTab ? "Kanji Collection" : "Vocabulary Collection"}
+              </p>
+              <h2 style={styles.sectionTitle}>
+                {isKanjiTab
+                  ? `${filteredKanjiEntries.length} kanji found`
+                  : `${filteredVocabEntries.length} words found`}
+              </h2>
+            </div>
+
+            <div style={styles.searchBarRight}>
+              <input
+                placeholder={
+                  isKanjiTab
+                    ? "Search kanji, readings, meanings, JLPT…"
+                    : "Search vocabulary, readings, meanings…"
+                }
+                style={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
-            </aside>
-
-            <section style={styles.content}>
-              <div style={styles.searchPanel}>
-                <div>
-                  <p style={styles.kicker}>Collection</p>
-
-                  <h2 style={styles.sectionTitle}>
-                    {vocabEntries.length} saved words
-                  </h2>
-                </div>
-
-                <input
-                  placeholder="Search words, readings, meanings…"
-                  style={styles.searchInput}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div style={styles.filterBar}>
+              {searchTerm && (
                 <button
                   type="button"
-                  style={
-                    activeFilter === "all"
-                      ? styles.filterActive
-                      : styles.filter
-                  }
-                  onClick={() => setActiveFilter("all")}
+                  onClick={() => handleSearchChange("")}
+                  style={styles.clearSearchBtn}
+                  title="Clear search"
                 >
-                  All ({vocabEntries.length})
+                  ✕
                 </button>
+              )}
+            </div>
+          </div>
 
+          {/* Filter Pills */}
+          <div style={styles.filterBar}>
+            <button
+              type="button"
+              style={activeFilter === "all" ? styles.filterActive : styles.filter}
+              onClick={() => handleFilterChange("all")}
+            >
+              All ({isKanjiTab ? kanjiEntries.length : vocabEntries.length})
+            </button>
+
+            <button
+              type="button"
+              style={
+                activeFilter === "favorites"
+                  ? styles.filterFavActive
+                  : styles.filter
+              }
+              onClick={() => handleFilterChange("favorites")}
+            >
+              Favorites ({isKanjiTab ? kanjiFavorites.size : vocabFavorites.size})
+            </button>
+
+            {isKanjiTab &&
+              ["N5", "N4", "N3", "N2", "N1"].map((level) => (
                 <button
+                  key={level}
                   type="button"
                   style={
-                    activeFilter === "favorites"
-                      ? styles.filterFavActive
+                    activeFilter === level
+                      ? styles.filterJlptActive
                       : styles.filter
                   }
-                  onClick={() => setActiveFilter("favorites")}
+                  onClick={() => handleFilterChange(level)}
                 >
-                  ⭐ Favorites ({vocabFavorites.size})
+                  {level}
                 </button>
-              </div>
+              ))}
+          </div>
 
-              {filteredVocabEntries.length > 0 ? (
+          {/* Cards Grid & Pagination */}
+          {isKanjiTab ? (
+            filteredKanjiEntries.length > 0 ? (
+              <>
                 <div style={styles.cardGrid}>
-                  {filteredVocabEntries.map((entry) => (
-                    <VocabularyCard
-                      key={`v-${entry.id}`}
+                  {paginatedKanjiEntries.map((entry) => (
+                    <KanjiCard
+                      key={`k-${entry.id}`}
                       entry={entry}
-                      isFavorite={vocabFavorites.has(entry.id)}
-                      onDelete={(id) =>
-                        handleDelete(id, "vocab")
-                      }
-                      onEdit={(item) =>
-                        startEditing(item, "vocab")
-                      }
+                      isFavorite={kanjiFavorites.has(entry.id)}
+                      onDelete={(id) => handleDelete(id, "kanji")}
+                      onEdit={(item) => startEditing(item, "kanji")}
                       onToggleFavorite={(id) =>
-                        handleToggleFavorite(id, "vocab")
+                        handleToggleFavorite(id, "kanji")
                       }
                     />
                   ))}
                 </div>
-              ) : (
-                <EmptyState
-                  isFavorites={activeFilter === "favorites"}
+
+                {totalPages > 1 && (
+                  <div style={styles.pagination}>
+                    <button
+                      type="button"
+                      style={styles.paginationButton}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((page) => page - 1)}
+                    >
+                      ← Previous
+                    </button>
+
+                    <div style={styles.pageNumbers}>
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const page = index + 1;
+                        return (
+                          <button
+                            key={page}
+                            type="button"
+                            style={
+                              currentPage === page
+                                ? styles.paginationActive
+                                : styles.paginationButton
+                            }
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      style={styles.paginationButton}
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((page) => page + 1)}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <EmptyState isFavorites={activeFilter === "favorites"} />
+            )
+          ) : filteredVocabEntries.length > 0 ? (
+            <div style={styles.cardGrid}>
+              {filteredVocabEntries.map((entry) => (
+                <VocabularyCard
+                  key={`v-${entry.id}`}
+                  entry={entry}
+                  isFavorite={vocabFavorites.has(entry.id)}
+                  onDelete={(id) => handleDelete(id, "vocab")}
+                  onEdit={(item) => startEditing(item, "vocab")}
+                  onToggleFavorite={(id) =>
+                    handleToggleFavorite(id, "vocab")
+                  }
                 />
-              )}
-            </section>
-          </main>
-        )}
+              ))}
+            </div>
+          ) : (
+            <EmptyState isFavorites={activeFilter === "favorites"} />
+          )}
+        </main>
       </div>
 
       <style>{`
@@ -854,7 +957,7 @@ function EmptyState({ isFavorites }) {
   return (
     <div style={styles.emptyState}>
       <div style={styles.emptyIcon}>
-        {isFavorites ? "⭐" : "🔍"}
+        {isFavorites ? "★" : "—"}
       </div>
 
       <h2 style={styles.emptyTitle}>
@@ -961,6 +1064,32 @@ const styles = {
     padding: "16px 24px 24px",
   },
 
+  topNavRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    maxWidth: "1280px",
+    width: "100%",
+    margin: "0 auto 20px",
+    flexWrap: "wrap",
+    gap: "12px",
+  },
+
+  backHomeBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    color: "#f472b6",
+    textDecoration: "none",
+    fontWeight: "700",
+    fontSize: "0.95rem",
+    background: "rgba(244, 114, 182, 0.12)",
+    border: "1px solid rgba(244, 114, 182, 0.3)",
+    padding: "8px 16px",
+    borderRadius: "8px",
+    transition: "all 0.15s ease",
+  },
+
   heroKicker: {
     color: "#f9a8d4",
     fontSize: "1.5rem",
@@ -980,118 +1109,206 @@ const styles = {
   },
 
   header: {
-    margin: "0 auto 16px",
-    maxWidth: "860px",
+    margin: "0 auto 20px",
+    maxWidth: "960px",
     textAlign: "center",
     flexShrink: 0,
   },
 
+  headerBadges: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "12px",
+    flexWrap: "wrap",
+    marginBottom: "8px",
+  },
+
+  headerStatsPill: {
+    background: "rgba(244, 114, 182, 0.12)",
+    border: "1px solid rgba(244, 114, 182, 0.3)",
+    borderRadius: "999px",
+    padding: "4px 14px",
+    color: "#fbcfe8",
+    fontSize: "0.82rem",
+    fontWeight: "700",
+    letterSpacing: "0.02em",
+  },
+
   title: {
     color: "white",
-    fontSize: "clamp(2rem, 5vw, 4rem)",
-    lineHeight: 1.05,
-    margin: "0 0 6px",
+    fontSize: "clamp(2rem, 5vw, 3.5rem)",
+    lineHeight: 1.1,
+    margin: "0 0 8px",
     fontFamily: "inherit",
+    fontWeight: "900",
+    background: "linear-gradient(135deg, #ffffff 40%, #f472b6 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
   },
 
   subtitle: {
     color: "#cbd5e1",
-    fontSize: "clamp(0.95rem, 2.5vw, 1.1rem)",
+    fontSize: "clamp(0.95rem, 2.5vw, 1.05rem)",
     lineHeight: 1.6,
+    maxWidth: "680px",
+    margin: "0 auto",
   },
-  flashcardsLink: {
-    display: "inline-block",
-    marginTop: "12px",
-    padding: "11px 20px",
+
+  toolbar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "14px",
+    marginBottom: "18px",
+    background: "rgba(15, 23, 42, 0.6)",
+    padding: "10px 14px",
+    borderRadius: "14px",
+    border: "1px solid rgba(226, 232, 240, 0.12)",
+  },
+
+  toolbarActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flexWrap: "wrap",
+  },
+
+  primaryAddBtn: {
+    background: "linear-gradient(135deg, #ec4899 0%, #db2777 100%)",
+    color: "#ffffff",
+    border: "none",
     borderRadius: "10px",
-    background: "rgba(236, 72, 153, 0.16)",
-    border: "1px solid rgba(236, 72, 153, 0.4)",
+    padding: "10px 18px",
+    fontWeight: "700",
+    fontSize: "0.92rem",
+    cursor: "pointer",
+    boxShadow: "0 4px 14px rgba(236, 72, 153, 0.35)",
+    transition: "transform 0.15s ease",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    fontFamily: "inherit",
+  },
+
+  toolBtn: {
+    background: "rgba(30, 41, 59, 0.8)",
+    border: "1px solid rgba(244, 114, 182, 0.3)",
+    color: "#f1f5f9",
+    borderRadius: "10px",
+    padding: "10px 16px",
+    fontWeight: "600",
+    fontSize: "0.92rem",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+
+  toolBtnActive: {
+    background: "rgba(244, 114, 182, 0.2)",
+    border: "1px solid rgba(244, 114, 182, 0.5)",
+    color: "#fdf2f8",
+    borderRadius: "10px",
+    padding: "10px 16px",
+    fontWeight: "600",
+    fontSize: "0.92rem",
+    cursor: "pointer",
+    boxShadow: "0 0 12px rgba(244, 114, 182, 0.25)",
+    fontFamily: "inherit",
+  },
+
+  flashcardsLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "10px 16px",
+    borderRadius: "10px",
+    background: "rgba(236, 72, 153, 0.15)",
+    border: "1px solid rgba(236, 72, 153, 0.35)",
     color: "#f9a8d4",
-    fontWeight: 800,
-    fontSize: "0.95rem",
+    fontWeight: "700",
+    fontSize: "0.92rem",
     textDecoration: "none",
     transition: "background 0.2s ease",
   },
-  /*
-   * Important:
-   * There is deliberately NO overflow setting here.
-   *
-   * This means the browser's normal page scrollbar handles
-   * the entire Kanji/Vocabulary page.
-   */
+
   layout: {
-    alignItems: "start",
-    display: "grid",
-    gap: "24px",
-    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-    minWidth: 0,
     margin: "0 auto",
-    maxWidth: "1240px",
+    maxWidth: "1280px",
     width: "100%",
     boxSizing: "border-box",
-    padding: "0 20px 20px",
-  },
-
-  sidebar: {
-    minWidth: 0,
   },
 
   pageTabs: {
     display: "flex",
-    gap: "8px",
-    margin: "0 auto 16px",
-    maxWidth: "1240px",
-    width: "100%",
-    background: "rgba(15, 23, 42, 0.78)",
-    padding: "6px",
-    borderRadius: "12px",
-    border: "1px solid rgba(226, 232, 240, 0.16)",
-    flexShrink: 0,
-    boxSizing: "border-box",
+    gap: "6px",
+    background: "rgba(10, 15, 30, 0.8)",
+    padding: "4px",
+    borderRadius: "10px",
+    border: "1px solid rgba(226, 232, 240, 0.12)",
   },
 
   pageTab: {
-    flex: 1,
     background: "transparent",
     border: "none",
     color: "#94a3b8",
-    padding: "12px",
+    padding: "8px 16px",
     borderRadius: "8px",
     cursor: "pointer",
-    fontWeight: 800,
-    fontSize: "1rem",
+    fontWeight: 700,
+    fontSize: "0.92rem",
     fontFamily: "inherit",
+    transition: "color 0.2s ease",
   },
 
   pageTabActive: {
-    flex: 1,
-    background: "rgba(255, 255, 255, 0.1)",
+    background: "rgba(244, 114, 182, 0.2)",
     border: "none",
-    color: "#f8fafc",
-    padding: "12px",
+    color: "#fdf2f8",
+    padding: "8px 16px",
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: 800,
-    fontSize: "1rem",
+    fontSize: "0.92rem",
     fontFamily: "inherit",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-  },
-
-  content: {
-    minWidth: 0,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
   },
 
   searchPanel: {
     alignItems: "center",
     background: "rgba(15, 23, 42, 0.7)",
     border: "1px solid rgba(226, 232, 240, 0.14)",
-    borderRadius: "10px",
+    borderRadius: "12px",
     display: "flex",
     flexWrap: "wrap",
-    gap: "18px",
+    gap: "16px",
     justifyContent: "space-between",
-    marginBottom: "12px",
-    padding: "18px",
+    marginBottom: "14px",
+    padding: "16px 20px",
+  },
+
+  searchBarLeft: {
+    display: "flex",
+    flexDirection: "column",
+  },
+
+  searchBarRight: {
+    position: "relative",
+    flex: "1 1 300px",
+    maxWidth: "460px",
+  },
+
+  clearSearchBtn: {
+    position: "absolute",
+    right: "12px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "transparent",
+    border: "none",
+    color: "#94a3b8",
+    fontSize: "1rem",
+    cursor: "pointer",
+    padding: "4px",
   },
 
   kicker: {
@@ -1105,8 +1322,8 @@ const styles = {
 
   sectionTitle: {
     color: "white",
-    fontSize: "1.45rem",
-    fontWeight: 900,
+    fontSize: "1.3rem",
+    fontWeight: 800,
     margin: 0,
     fontFamily: "inherit",
   },
@@ -1118,16 +1335,15 @@ const styles = {
     boxSizing: "border-box",
     color: "white",
     font: "inherit",
-    maxWidth: "420px",
     outline: "none",
-    padding: "12px 14px",
+    padding: "12px 36px 12px 14px",
     width: "100%",
   },
 
   filterBar: {
     display: "flex",
     gap: "10px",
-    marginBottom: "18px",
+    marginBottom: "20px",
     flexWrap: "wrap",
   },
 
@@ -1141,6 +1357,7 @@ const styles = {
     fontSize: "0.88rem",
     fontWeight: 700,
     padding: "8px 18px",
+    transition: "all 0.15s ease",
   },
 
   filterActive: {
@@ -1179,12 +1396,85 @@ const styles = {
     padding: "8px 18px",
   },
 
+  drawerBackdrop: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0, 0, 0, 0.72)",
+    backdropFilter: "blur(6px)",
+    WebkitBackdropFilter: "blur(6px)",
+    zIndex: 1000,
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+
+  drawer: {
+    background: "rgba(15, 23, 42, 0.98)",
+    borderLeft: "1px solid rgba(244, 114, 182, 0.25)",
+    width: "min(640px, 100vw)",
+    height: "100%",
+    boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
+    boxShadow: "-10px 0 35px rgba(0, 0, 0, 0.6)",
+    overflowY: "auto",
+  },
+
+  drawerHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "20px 24px",
+    borderBottom: "1px solid rgba(244, 114, 182, 0.15)",
+    position: "sticky",
+    top: 0,
+    background: "rgba(15, 23, 42, 0.96)",
+    backdropFilter: "blur(8px)",
+    zIndex: 10,
+  },
+
+  drawerKicker: {
+    fontSize: "0.75rem",
+    fontWeight: "800",
+    letterSpacing: "0.08em",
+    color: "#f472b6",
+    textTransform: "uppercase",
+  },
+
+  drawerTitle: {
+    margin: "4px 0 0 0",
+    fontSize: "1.25rem",
+    fontWeight: "800",
+    color: "#fdf2f8",
+  },
+
+  drawerCloseBtn: {
+    background: "rgba(255, 255, 255, 0.08)",
+    border: "1px solid rgba(255, 255, 255, 0.12)",
+    color: "#e2e8f0",
+    fontSize: "1.1rem",
+    width: "36px",
+    height: "36px",
+    borderRadius: "50%",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "background 0.2s ease",
+  },
+
+  drawerBody: {
+    padding: "20px 24px 40px",
+  },
+
   cardGrid: {
     display: "grid",
     alignItems: "start",
-    gap: "16px",
+    gap: "18px",
     gridTemplateColumns:
-      "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
+      "repeat(auto-fill, minmax(min(100%, 300px), 1fr))",
   },
 
   emptyState: {

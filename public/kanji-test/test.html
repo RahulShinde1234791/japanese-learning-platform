@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanji Recognition Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 16px;
+      background: #111827;
+      color: #f9fafb;
+    }
+    canvas {
+      background: white;
+      border-radius: 8px;
+      border: 2px solid #64748b;
+      touch-action: none;
+      width: 300px;
+      height: 300px;
+      max-width: 100%;
+    }
+    button {
+      margin: 8px 6px 8px 0;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    #results {
+      font-size: 2rem;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kanji Recognition Test</h1>
+  <p>Draw one kanji in the box, then select Recognize.</p>
+
+  <canvas id="kanjiCanvas" width="300" height="300"></canvas>
+  <div>
+    <button id="recognizeButton">Recognize</button>
+    <button id="clearButton">Clear</button>
+  </div>
+
+  <h2>Candidate characters</h2>
+  <p id="results">Draw a character to begin.</p>
+
+  <script src="./kanji-canvas.min.js"></script>
+  <script src="./ref-patterns.js"></script>
+  <script>
+    const canvas = document.getElementById("kanjiCanvas");
+    const results = document.getElementById("results");
+
+    // The library uses the canvas ID to track its drawing.
+    KanjiCanvas.init("kanjiCanvas");
+
+    document.getElementById("recognizeButton").addEventListener("click", () => {
+      if (KanjiCanvas.recordedPattern_kanjiCanvas.length === 0) {
+        results.textContent = "Draw a character first.";
+        return;
+      }
+
+      const candidates = KanjiCanvas.recognize("kanjiCanvas");
+      results.textContent = candidates || "No candidates returned.";
+    });
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+      KanjiCanvas.erase("kanjiCanvas");
+      results.textContent = "Draw another character.";
+    });
+  </script>
+</body>
+</html>

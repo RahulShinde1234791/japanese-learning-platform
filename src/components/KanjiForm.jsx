@@ -26,13 +26,36 @@ function joinUnique(values) {
   return [...new Set(values.filter(Boolean))].join(", ");
 }
 
-function KanjiForm({ editingEntry, onCancelEdit, onSubmit, onUseAsVocabulary, quickAddText, onQuickAddTextChange, selectedQuickAddCharacters,
-  onSelectedQuickAddCharactersChange, onAddSelectedKanji,}) {
-  const [formData, setFormData] = useState(editingEntry ?? emptyForm);
+function KanjiForm({
+  editingEntry,
+  onCancelEdit,
+  onSubmit,
+  onUseAsVocabulary,
+  quickAddText,
+  onQuickAddTextChange,
+  selectedQuickAddCharacters,
+  onSelectedQuickAddCharactersChange,
+  onAddSelectedKanji,
+  prefilledKanji,
+}) {
+  const [formData, setFormData] = useState(() => ({
+    ...(editingEntry ?? emptyForm),
+    kanji: editingEntry?.kanji ?? prefilledKanji ?? "",
+  }));
   const [loading, setLoading] = useState(false);
   const [quickLookupResults, setQuickLookupResults] = useState([]);
   const [quickLookupLoading, setQuickLookupLoading] = useState(false);
   const [selectedQuickLookupCharacters, setSelectedQuickLookupCharacters] = useState(new Set());
+
+  // Update when prefilled kanji arrives
+  useEffect(() => {
+    if (prefilledKanji && !editingEntry) {
+      setFormData((prev) => ({
+        ...prev,
+        kanji: prefilledKanji,
+      }));
+    }
+  }, [prefilledKanji, editingEntry]);
 
   async function handleAutoFill() {
     const kanjiStr = formData.kanji.trim();

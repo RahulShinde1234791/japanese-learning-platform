@@ -168,9 +168,15 @@ function Flashcards() {
 
   return (
     <main style={styles.page}>
-      <Link to="/kanji" style={styles.backLink}>
-        ← Back to Kanji & Vocabulary
-      </Link>
+      <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+        <Link to="/" style={styles.backLink}>
+          ← Return to Home
+        </Link>
+        <span style={{ color: "#475569" }}>|</span>
+        <Link to="/kanji" style={styles.backLink}>
+          Kanji & Vocabulary →
+        </Link>
+      </div>
 
       <header style={styles.header}>
         <p style={styles.kicker}>復習しましょう</p>
@@ -463,7 +469,24 @@ const styles = {
     minHeight: "100vh",
     boxSizing: "border-box",
     padding: "36px 24px",
-    background: "linear-gradient(135deg, #0b1120, #030712)",
+    background: `
+      radial-gradient(
+        ellipse at 50% 0%,
+        rgba(88, 28, 70, 0.30) 0%,
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse at 100% 45%,
+        rgba(30, 41, 85, 0.22) 0%,
+        transparent 50%
+      ),
+      linear-gradient(
+        180deg,
+        #090817 0%,
+        #070b1a 48%,
+        #020617 100%
+      )
+    `,
     color: "#f8fafc",
     fontFamily:
       "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
