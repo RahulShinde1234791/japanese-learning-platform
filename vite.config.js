@@ -5,6 +5,14 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
+    watch: {
+      ignored: [
+        "**/ml-pipeline/**",
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/dist/**",
+      ],
+    },
     proxy: {
       "/api/jisho": {
         target: "https://jisho.org",
