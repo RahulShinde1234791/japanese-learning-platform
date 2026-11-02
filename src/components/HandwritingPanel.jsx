@@ -107,6 +107,7 @@ export default function HandwritingPanel({
   const [strokeCount, setStrokeCount] = useState(0);
   const [autoRecognize, setAutoRecognize] = useState(true);
   const debounceTimerRef = useRef(null);
+  const isRecognizingRef = useRef(false);
   const canvasRef = useRef(null);
 
   // Initialize KanjiCanvas on mount as fallback and stroke tracker
@@ -141,13 +142,19 @@ export default function HandwritingPanel({
   // Main recognition executor
   const performRecognition = useCallback(async () => {
     if (!window.KanjiCanvas) return;
-    const pattern = window.KanjiCanvas[`recordedPattern_${canvasId}`];
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
 
+    const pattern = window.KanjiCanvas[`recordedPattern_${canvasId}`];
     if (!pattern || pattern.length === 0) {
       setCandidates([]);
       return;
     }
 
+    if (isRecognizingRef.current) return;
+    isRecognizingRef.current = true;
     setIsRecognizing(true);
     try {
       let results = [];
@@ -186,6 +193,7 @@ export default function HandwritingPanel({
     } catch (err) {
       console.error("Recognition error:", err);
     } finally {
+      isRecognizingRef.current = false;
       setIsRecognizing(false);
     }
   }, [canvasId, engineMode]);

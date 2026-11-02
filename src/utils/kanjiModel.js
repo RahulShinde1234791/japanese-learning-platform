@@ -6,6 +6,23 @@ ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/di
 
 let sessionPromise = null;
 let charMapPromise = null;
+let inferenceLock = Promise.resolve();
+
+/**
+ * Executes session.run with strict serialization to prevent concurrent WASM/JSEP buffer conflicts.
+ */
+async function runSessionInferenceSafely(session, feeds) {
+  const previousLock = inferenceLock;
+  let release;
+  inferenceLock = new Promise((res) => { release = res; });
+
+  try {
+    await previousLock;
+    return await session.run(feeds);
+  } finally {
+    release();
+  }
+}
 
 /**
  * Loads the trained KanjiCNN ONNX model and character mapping.
@@ -84,8 +101,8 @@ export function preprocessStrokesToTensor(pattern) {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, 64, 64);
 
-  // Scale character to fit ~48px region (leaves 8px padding on all sides)
-  const targetSize = 48.0;
+  // Scale character to fit ~50px region (matches ETL9B ~50px average character box)
+  const targetSize = 50.0;
   const scale = targetSize / maxDim;
   const centerX = (minX + maxX) / 2;
   const centerY = (minY + maxY) / 2;
@@ -94,7 +111,7 @@ export function preprocessStrokesToTensor(pattern) {
 
   // 3. Render strokes in white (1.0) with rounded line caps
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 3.2; // Matches ~3px stroke width in ETL9B 64x64 cards
+  ctx.lineWidth = 3.8; // Closely matches ~4px ink thickness of ETL9B handwriting
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
@@ -148,27 +165,33 @@ function softmax(logits) {
  * @param {number} topK - Number of top candidate suggestions to return (default: 5)
  * @returns {Promise<Array<{ char: string, confidence: number }>>}
  */
-export async function recognizeWithCustomCNN(pattern, topK = 5) {
+export async function recognizeWithCustomCNN(pattern, topK = 6) {
   const tensor = preprocessStrokesToTensor(pattern);
   if (!tensor) return [];
 
-  const [session, charMap] = await Promise.all([getModelSession(), getCharMap()]);
+  try {
+    const [session, charMap] = await Promise.all([getModelSession(), getCharMap()]);
 
-  // Run model inference
-  const outputMap = await session.run({ input: tensor });
-  const logits = outputMap.logits.data; // Float32Array of length 162
-  const probs = softmax(logits);
+    // Run model inference with safe sequential execution
+    const outputMap = await runSessionInferenceSafely(session, { input: tensor });
+    const logits = outputMap.logits.data; // Float32Array of length 162
+    const probs = softmax(logits);
 
-  // Rank classes by probability
-  const indexed = [];
-  for (let i = 0; i < probs.length; i++) {
-    indexed.push({
-      index: i,
-      confidence: probs[i],
-      char: charMap.idx_to_char[i] || charMap.characters[i] || "?",
-    });
+    // Rank classes by probability
+    const indexed = [];
+    for (let i = 0; i < probs.length; i++) {
+      indexed.push({
+        index: i,
+        confidence: probs[i],
+        char: charMap.idx_to_char[i] || charMap.characters[i] || "?",
+      });
+    }
+
+    indexed.sort((a, b) => b.confidence - a.confidence);
+    return indexed.slice(0, topK);
+  } catch (err) {
+    // If a session error occurs, invalidate the cached session so next call creates a fresh session
+    sessionPromise = null;
+    throw err;
   }
-
-  indexed.sort((a, b) => b.confidence - a.confidence);
-  return indexed.slice(0, topK);
 }
