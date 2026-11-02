@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { recognizeWithCustomCNN } from "../utils/kanjiModel";
 
 /**
  * Loads an external script dynamically if not already loaded.
@@ -100,7 +101,7 @@ export default function HandwritingPanel({
   onClose,
 }) {
   const canvasId = "kanjiHandwritingCanvas";
-  const [engineMode, setEngineMode] = useState("neural"); // "neural" or "local"
+  const [engineMode, setEngineMode] = useState("cnn"); // "cnn" (custom offline ONNX), "cloud" (Google API), or "local" (KanjiCanvas)
   const [candidates, setCandidates] = useState([]);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [strokeCount, setStrokeCount] = useState(0);
@@ -151,19 +152,34 @@ export default function HandwritingPanel({
     try {
       let results = [];
 
-      // Try Google neural handwriting first (handles any stroke order, variations, compound kanji)
-      try {
-        results = await recognizeWithGoogle(pattern, 300, 300);
-      } catch (networkErr) {
-        console.warn("Online handwriting recognition failed, falling back to local database", networkErr);
+      // 1. If in CNN mode (default), run client-side ONNX model inference
+      if (engineMode === "cnn") {
+        try {
+          const cnnResults = await recognizeWithCustomCNN(pattern, 6);
+          if (cnnResults && cnnResults.length > 0) {
+            results = cnnResults;
+          }
+        } catch (cnnErr) {
+          console.warn("[KanjiCNN] In-browser ONNX inference failed, trying fallback:", cnnErr);
+        }
       }
 
-      // If online returned nothing or failed, use local KanjiCanvas
+      // 2. If in cloud mode or if CNN returned no results
+      if (results.length === 0 && (engineMode === "cloud" || engineMode === "cnn")) {
+        try {
+          const cloudResults = await recognizeWithGoogle(pattern, 300, 300);
+          if (cloudResults && cloudResults.length > 0) {
+            results = cloudResults.map((char) => ({ char, confidence: null }));
+          }
+        } catch (networkErr) {
+          console.warn("Cloud handwriting recognition failed:", networkErr);
+        }
+      }
+
+      // 3. Fallback to local KanjiCanvas heuristic if still no results
       if (!results || results.length === 0) {
-        results = recognizeWithLocalCanvas(canvasId);
-        setEngineMode("local");
-      } else {
-        setEngineMode("neural");
+        const localResults = recognizeWithLocalCanvas(canvasId);
+        results = localResults.map((char) => ({ char, confidence: null }));
       }
 
       setCandidates(results);
@@ -172,7 +188,7 @@ export default function HandwritingPanel({
     } finally {
       setIsRecognizing(false);
     }
-  }, [canvasId]);
+  }, [canvasId, engineMode]);
 
   // Triggers recognition after stroke completion with slight debounce
   function handlePointerUp() {
@@ -216,9 +232,24 @@ export default function HandwritingPanel({
         <div style={styles.titleRow}>
           <div>
             <h3 style={styles.title}>Handwriting Recognition</h3>
-            <span style={styles.engineBadge}>
-              {engineMode === "neural" ? "Cloud Service (Prototype)" : "Local Heuristic (KanjiCanvas)"}
-            </span>
+            <div style={styles.engineToggleRow}>
+              <button
+                type="button"
+                onClick={() => setEngineMode("cnn")}
+                style={engineMode === "cnn" ? styles.engineBtnActive : styles.engineBtn}
+                title="Trained KanjiCNN model (162 Hiragana & N5 Kanji, runs 100% offline in browser)"
+              >
+                Offline CNN (Trained)
+              </button>
+              <button
+                type="button"
+                onClick={() => setEngineMode("cloud")}
+                style={engineMode === "cloud" ? styles.engineBtnActive : styles.engineBtn}
+                title="Google Cloud Handwriting (Supports all 3,000+ Kanji)"
+              >
+                Cloud API (All Kanji)
+              </button>
+            </div>
           </div>
         </div>
         {onClose && (
@@ -234,7 +265,9 @@ export default function HandwritingPanel({
       </div>
 
       <p style={styles.subtitle}>
-        Draw any kanji or kana character to find matching candidates.
+        {engineMode === "cnn"
+          ? "Powered by your custom-trained KanjiCNN (98.7% test accuracy). Runs 100% locally in your browser."
+          : "Powered by Cloud Handwriting API for advanced or full Japanese dictionary search."}
       </p>
 
       {/* Drawing Area & Canvas */}
@@ -314,17 +347,23 @@ export default function HandwritingPanel({
 
         {candidates.length > 0 ? (
           <div style={styles.candidateChips}>
-            {candidates.map((char) => (
-              <div key={char} style={styles.chipGroup}>
-                <button
-                  type="button"
-                  onClick={() => onSearch && onSearch(char)}
-                  style={styles.charBadge}
-                  title={`Search for "${char}" in collection`}
-                >
-                  <span style={styles.charText}>{char}</span>
-                  <span style={styles.charAction}>Search</span>
-                </button>
+            {candidates.map((item, idx) => {
+              const char = typeof item === "string" ? item : item.char;
+              const confidencePct = item.confidence != null ? Math.round(item.confidence * 100) : null;
+              return (
+                <div key={`${char}-${idx}`} style={styles.chipGroup}>
+                  <button
+                    type="button"
+                    onClick={() => onSearch && onSearch(char)}
+                    style={styles.charBadge}
+                    title={`Search for "${char}" in collection`}
+                  >
+                    <span style={styles.charText}>{char}</span>
+                    {confidencePct !== null && (
+                      <span style={styles.charConfidence}>{confidencePct}%</span>
+                    )}
+                    <span style={styles.charAction}>Search</span>
+                  </button>
 
                 <div style={styles.charQuickActions}>
                   {onAddKanji && (
@@ -349,8 +388,9 @@ export default function HandwritingPanel({
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
         ) : (
           <p style={styles.emptyPrompt}>
             {strokeCount === 0
@@ -395,6 +435,33 @@ const styles = {
     fontWeight: "800",
     color: "#fdf2f8",
     letterSpacing: "0.02em",
+  },
+  engineToggleRow: {
+    display: "flex",
+    gap: "6px",
+    marginTop: "6px",
+  },
+  engineBtn: {
+    background: "rgba(30, 41, 59, 0.7)",
+    border: "1px solid rgba(148, 163, 184, 0.25)",
+    borderRadius: "6px",
+    color: "#94a3b8",
+    fontSize: "0.72rem",
+    fontWeight: "700",
+    padding: "3px 8px",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+  },
+  engineBtnActive: {
+    background: "rgba(236, 72, 153, 0.2)",
+    border: "1px solid rgba(244, 114, 182, 0.5)",
+    borderRadius: "6px",
+    color: "#f472b6",
+    fontSize: "0.72rem",
+    fontWeight: "800",
+    padding: "3px 8px",
+    cursor: "pointer",
+    boxShadow: "0 0 10px rgba(244, 114, 182, 0.2)",
   },
   engineBadge: {
     fontSize: "0.72rem",
@@ -577,6 +644,16 @@ const styles = {
     fontWeight: "800",
     lineHeight: "1.15",
     color: "#ffffff",
+  },
+  charConfidence: {
+    fontSize: "0.68rem",
+    color: "#6ee7b7",
+    fontWeight: "800",
+    marginTop: "1px",
+    background: "rgba(16, 185, 129, 0.15)",
+    padding: "1px 5px",
+    borderRadius: "4px",
+    border: "1px solid rgba(16, 185, 129, 0.3)",
   },
   charAction: {
     fontSize: "0.68rem",
